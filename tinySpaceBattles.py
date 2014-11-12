@@ -115,6 +115,7 @@ class TinySpaceBattles:
         if pygame.joystick.get_count() == 0:
             # No joysticks!
             print ("No Wiimote found!")
+            pygame.key.set_repeat(1, 50)
         else:
             # Use joystick #0 and initialize it
             self.wiimote = pygame.joystick.Joystick(0)
@@ -133,9 +134,10 @@ class TinySpaceBattles:
         self.p2.update(x, y)
 
     def Check_for_button_held(self):
-        for button in xrange (0,4):
-            if self.wiimote.get_button(button):
-                self.Player_move(wiimote_move[button])
+        if self.wiimote is not None:
+            for button in xrange (0,4):
+                if self.wiimote.get_button(button):
+                    self.Player_move(wiimote_move[button])
 
     def Events(self):
         for event in pygame.event.get():
