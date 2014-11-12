@@ -47,7 +47,7 @@ class TinyServer(Server):
 
     def Connected(self, channel, addr):
         if self.p1 is not None and self.p2 is not None:
-            channel.Send({"action": "admin", "message": "server_full"})  # TODO: Make sure client handles this
+            channel.Send({"action": "init", "p": "full"})  # TODO: Make sure client handles this
         else:
             self.AddPlayer(channel)
 
@@ -60,17 +60,17 @@ class TinyServer(Server):
             self.p2 = player
             print "New P2 (" + str(player.addr) + ")"
         else:
-            sys.stderr.write("ERROR: Couldn't determine player\n")
+            sys.stderr.write("ERROR: Couldn't determine player from client.\n")
             sys.stderr.flush()
             sys.exit(1)
 
-
-        # If only P1, send "waiting" message
+        # If only P1, tell client they're P1
         if self.p2 is None:
-            player.Send({"action": "initial", "pp_data": None})
-        # Else if P2, exchange position info and start game
+            player.Send({"action": "init", "p": 'p1'})
+        # Else if P2, notify P2 and send position data
         else:
-            player.Send('player data')  # TODO: Implement proper message
+            self.p2.Send({"action": "init", "p": 'p2'})
+            player.SendToAll({"action": "init", "s": 'ready'})
 
     def DelPlayer(self, player):
         if self.p1 is player:

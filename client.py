@@ -8,7 +8,7 @@ from tinySpaceBattles import TinySpaceBattles
 class Client(ConnectionListener, TinySpaceBattles):
     def __init__(self, host, port):
         self.Connect((host, port))
-        self.players = {}
+        self.player_loc = dict()
         TinySpaceBattles.__init__(self)
 
     def Loop(self):
@@ -21,68 +21,69 @@ class Client(ConnectionListener, TinySpaceBattles):
         if "Connecting" in self.statusLabel:
             self.statusLabel = "Connecting" + ("." * ((self.frame / 30) % 4))
 
-    def Send_action(self, action, loc):
-        connection.Send({"action": action, "pp_data": dict({'p1': loc, 'p2': None})})
+    def Send_action(self, action, loc_add=None):
+        if self.is_p1:
+            loc = self.p1.get_loc()
+            if loc_add is not None:
+                loc = [x + y for x, y in zip(self.p1.get_loc(), loc_add)]
+            connection.Send({"action": action, "pp_data": dict({'p1': loc, 'p2': None})})
+        else:
+            loc = self.p2.get_loc()
+            if loc_add is not None:
+                loc = [x + y for x, y in zip(self.p2.get_loc(), loc_add)]
+            connection.Send({"action": action, "pp_data": dict({'p1': None, 'p2': loc})})
 
     #######################
     ### Event callbacks ###
     #######################
 
-    def Player_move(self, loc, dir):
-        if 'l' in dir:
-            loc[0] -= 5
-            self.Send_action('move', loc)
-        elif 'r' in dir:
-            loc[0] += 5
-            self.Send_action('move', loc)
-        elif 'u' in dir:
-            loc[1] -= 5
-            self.Send_action('move', loc)
-        elif 'd' in dir:
-            loc[1] += 5
-            self.Send_action('move', loc)
+    def Player_move(self, direction):
+        add_pos = [0, 0]
+        if 'l' in direction:
+            add_pos[0] -= 5
+        elif 'r' in direction:
+            add_pos[0] += 5
+        elif 'u' in direction:
+            add_pos[1] -= 5
+        elif 'd' in direction:
+            add_pos[1] += 5
+        self.Send_action('move', add_pos)
 
-    def Player_fire(self, loc):
-        self.Send_action('fire', loc)
+    def Player_fire(self):
+        self.Send_action('fire')
 
-    def Player_shield(self, loc):
-        self.Send_action('shield', loc)
+    def Player_shield(self):
+        self.Send_action('shield')
 
     ###############################
     ### Network event callbacks ###
     ###############################
 
-    def Network_initial(self, data):
-        if data["pp_data"] is None:
-            print("No other players currently connected.")
+    def Network_init(self, data):
+        if data["p"] == 'p1':
+            self.is_p1 = True
+            print("No other players currently connected. You are P1.")
+        elif data["p"] == 'p2':
+            self.is_p1 = False
+            print('You are P2. The game will start momentarily.')
         else:
-            self.players = data['pp_data']  # Dictionary p1=x,y, p2=x,y
-
-    def Network_players(self, data):
-        mark = []
-
-        for i in data['players']:
-            if not i in self.players:
-                self.players[i] = True
-
-        for i in self.players:
-            if not i in data['players'].keys():
-                mark.append(i)
-
-        for m in mark:
-            del self.players[m]
-
-        if str(len(data['players'])) == 2:
-            self.playersLabel = 'Battle!'
+            sys.stderr.write("ERROR: Couldn't determine player from server.\n")
+            sys.stderr.flush()
+            sys.exit(1)
 
     def Network_move(self, data):
-        p1 = data['pp_data']['p1']
-        p2 = data['pp_data']['p2']
-        self.P1_update(p1)
+        if data['pp_data']['p1'] is not None:
+            self.P1_update(data['pp_data']['p1'])
+        if data['pp_data']['p2'] is not None:
+            self.P2_update(data['pp_data']['p2'])
 
     def Network(self, data):
         print 'network:', data
         pass
+
+    ########################################
+    ### Built-in network event callbacks ###
+    ########################################
 
     def Network_connected(self, data):
         self.statusLabel = "Connected"

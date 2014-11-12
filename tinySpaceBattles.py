@@ -24,6 +24,16 @@ wiimote_shield = {4: 's'}  # A button
 
 wiimote_fire = {5: 'f'}  # B button
 
+keyboard_move = {pygame.K_a: 'l',  # a
+                 pygame.K_d: 'r',  # d
+                 pygame.K_w: 'u',  # w
+                 pygame.K_s: 'd'  # s
+                 }
+
+keyboard_shield = {pygame.K_PERIOD: 's'}  # .
+
+keyboard_fire = {pygame.K_SPACE: 'f'}  # *space*
+
 environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
@@ -42,21 +52,34 @@ class Starship(pygame.sprite.Sprite):
         # Call the parent class (Sprite) constructor
         super(Starship, self).__init__()
         self.image = pygame.Surface([30, 30])
-        self.colour = BLUE
+        self.colour = BLACK
         self.image.fill(self.colour)
         self.rect = self.image.get_rect()
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
+
 
     def set_colour(self, colour):
         self.colour = colour
         self.image.fill(self.colour)
         self.rect = self.image.get_rect()
 
-    def set_enemy(self, enemy):
-        if enemy:
+
+    def set_p1(self, p1):
+        """ Set True for P1, False for P2. """
+        if p1:
+            self.set_colour(BLUE)
+            self.update(randrange(0, 100), randrange(200, 300))
+        else:
+            self.set_p2(True)
+
+    def set_p2(self, p2):
+        """ Set True for P2, False for P1. """
+        if p2:
             self.set_colour(RED)
             self.update(randrange(550, 600), randrange(200, 300))
+        else:
+            self.set_p1(True)
 
     def update(self, x, y):
         """ Update the player's position. """
@@ -65,6 +88,7 @@ class Starship(pygame.sprite.Sprite):
         self.rect.y = y
 
     def get_loc(self):
+        """ Return player position. """
         return [self.rect.x, self.rect.y]
 
 
@@ -76,9 +100,11 @@ class TinySpaceBattles:
         self.down = False
         self.all_sprites_list = pygame.sprite.Group()
         self.p1 = Starship()
+        self.p1.set_p1(True)
         self.p2 = Starship()
-        self.p2.set_enemy(True)
+        self.p2.set_p2(True)
         self.wiimote = None
+        self.is_p1 = None
 
         self.Player_init()
         self.Wiimote_init()
@@ -88,13 +114,11 @@ class TinySpaceBattles:
         # Count the joysticks the computer has
         if pygame.joystick.get_count() == 0:
             # No joysticks!
-            print ("No Wiimote found! You need a Wiimote to play this game (for now...).")
-            pygame.quit()
-            exit()
-
-        # Use joystick #0 and initialize it
-        self.wiimote = pygame.joystick.Joystick(0)
-        self.wiimote.init()
+            print ("No Wiimote found!")
+        else:
+            # Use joystick #0 and initialize it
+            self.wiimote = pygame.joystick.Joystick(0)
+            self.wiimote.init()
 
     def Player_init(self):
         self.all_sprites_list.add(self.p1)
@@ -111,21 +135,30 @@ class TinySpaceBattles:
     def Check_for_button_held(self):
         for button in xrange (0,4):
             if self.wiimote.get_button(button):
-                self.Player_move(self.p1.get_loc(), wiimote_move[button])
+                self.Player_move(wiimote_move[button])
 
     def Events(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == 27):
+            if event.type == pygame.QUIT:
                 exit()
+
+            if event.type == pygame.KEYDOWN:
+                button = event.key
+                if button in keyboard_move:
+                    self.Player_move(keyboard_move[button])
+                elif button in keyboard_fire:
+                    self.Player_fire()
+                elif button in keyboard_shield:
+                    self.Player_shield()
 
             if event.type == pygame.JOYBUTTONDOWN:
                 button = event.dict['button']
                 if button in wiimote_move:
-                    self.Player_move(self.p1.get_loc(), wiimote_move[button])
+                    self.Player_move(wiimote_move[button])
                 elif button in wiimote_fire:
-                    self.Player_fire(self.p1.get_loc())
+                    self.Player_fire()
                 elif button in wiimote_shield:
-                    self.Player_shield(self.p1.get_loc())
+                    self.Player_shield()
 
 
     def Draw(self):
