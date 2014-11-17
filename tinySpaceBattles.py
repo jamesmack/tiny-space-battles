@@ -57,6 +57,7 @@ class Starship(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
+        self.bullets = pygame.sprite.Group()
 
 
     def set_colour(self, colour):
@@ -69,7 +70,7 @@ class Starship(pygame.sprite.Sprite):
         """ Set True for P1, False for P2. """
         if p1:
             self.set_colour(BLUE)
-            self.update(randrange(0, 100), randrange(200, 300))
+            self.set_loc(randrange(0, 50), randrange(200, 300))
         else:
             self.set_p2(True)
 
@@ -77,11 +78,11 @@ class Starship(pygame.sprite.Sprite):
         """ Set True for P2, False for P1. """
         if p2:
             self.set_colour(RED)
-            self.update(randrange(550, 600), randrange(200, 300))
+            self.set_loc(randrange(550, 600), randrange(200, 300))
         else:
             self.set_p1(True)
 
-    def update(self, x, y):
+    def set_loc(self, x, y):
         """ Update the player's position. """
         # Set position
         self.rect.x = x
@@ -89,6 +90,36 @@ class Starship(pygame.sprite.Sprite):
 
     def get_loc(self):
         """ Return player position. """
+        return [self.rect.x, self.rect.y]
+
+
+class Bullet(pygame.sprite.Sprite):
+    """ This class represents the bullet . """
+    def __init__(self):
+        # Call the parent class (Sprite) constructor
+        super(Bullet, self).__init__()
+        self.image = pygame.Surface([10, 3])
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.bullet_speed = 10
+        self.right = True
+
+    def update(self):
+        """ Move the bullet (PyGame-dictated function and signature). """
+        if self.right:  # move right
+            self.rect.x += self.bullet_speed
+        else:  # move left
+            self.rect.x -= self.bullet_speed
+
+
+    def set_loc(self, x, y):
+        """ Update the bullet's position. """
+        # Set position
+        self.rect.x = x
+        self.rect.y = y
+
+    def get_loc(self):
+        """ Return bullet position. """
         return [self.rect.x, self.rect.y]
 
 
@@ -127,15 +158,38 @@ class TinySpaceBattles:
 
     def P1_update(self, loc):
         [x, y] = loc
-        self.p1.update(x, y)
+        self.p1.set_loc(x, y)
 
     def P2_update(self, loc):
         [x, y] = loc
-        self.p2.update(x, y)
+        self.p2.set_loc(x, y)
+
+    def Recreate_sprite_lists(self):  # Need to find a better solution...
+        self.all_sprites_list.empty()
+        self.all_sprites_list.add(self.p1)
+        self.all_sprites_list.add(self.p2)
+
+        self.all_sprites_list.add(self.p1.bullets)
+        self.all_sprites_list.add(self.p2.bullets)
+
+    def Bullet_update(self, bullets, p1):
+        bullet_group = pygame.sprite.Group()
+        for loc in bullets:
+            bullet = Bullet()
+            bullet.right = True if p1 else False
+            # Set the bullet so it is where the player is
+            bullet.rect.x = loc[0]
+            bullet.rect.y = loc[1]
+            # Add the bullet to the list
+            bullet_group.add(bullet)
+        if p1:
+            self.p1.bullets = bullet_group
+        else:
+            self.p2.bullets = bullet_group
 
     def Check_for_button_held(self):
         if self.wiimote is not None:
-            for button in xrange (0,4):
+            for button in xrange(0, 4):
                 if self.wiimote.get_button(button):
                     self.Player_move(wiimote_move[button])
 
@@ -169,6 +223,7 @@ class TinySpaceBattles:
         screen.blit(fnt.render(self.statusLabel, 1, (0, 0, 0)), [10, 10])
         txt = fnt.render(self.playersLabel, 1, (0, 0, 0))
         screen.blit(fnt.render(self.playersLabel, 1, (0, 0, 0)), [10, 20])
+        self.Recreate_sprite_lists()
         self.all_sprites_list.draw(screen)
         pygame.display.flip()
 

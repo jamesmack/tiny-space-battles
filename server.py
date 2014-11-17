@@ -1,11 +1,14 @@
 import sys
-from time import sleep, localtime
-from weakref import WeakKeyDictionary
 import pygame
-from random import randint
-
+from time import sleep
+from tinySpaceBattles import Bullet
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
+
+X_DIM = 640
+Y_DIM = 480
+SCREENSIZE = (X_DIM, Y_DIM)
+
 
 class ServerChannel(Channel):
     """
@@ -15,7 +18,11 @@ class ServerChannel(Channel):
         Channel.__init__(self, *args, **kwargs)
         self.id = str(self._server.NextId())
         self.player_pos = [0, 0]
-        self.bullets = pygame.sprite.Group()
+        self.p1 = None
+        self.bullets = pygame.sprite.Group()  # Each player has their own list of bullets
+
+    def WhichPlayer(self):
+        return str("p1") if self.p1 else str("p2")
 
     def PassOn(self, data):
         # pass on what we received to all connected clients
@@ -29,7 +36,21 @@ class ServerChannel(Channel):
     ##################################
 
     def Network_move(self, data):
+        if self.p1 is True:
+            self.player_pos = data['pp_data']['p1']
+        else:
+            self.player_pos = data['pp_data']['p2']
         self.PassOn(data)
+
+    def Network_fire(self, data):
+        bullet = Bullet()
+        bullet.right = self.p1  # True when P1 (right), False when P2 (left)
+        # Set the bullet so it is where the player is
+        bullet.rect.x = self.player_pos[0]
+        bullet.rect.y = self.player_pos[1]+15
+        # Add the bullet to the list
+        self.bullets.add(bullet)
+        print("Player fired!")
 
 class TinyServer(Server):
     channelClass = ServerChannel
@@ -39,6 +60,7 @@ class TinyServer(Server):
         Server.__init__(self, *args, **kwargs)
         self.p1 = None
         self.p2 = None
+        self.ready = False
         print 'Server launched'
 
     def NextId(self):
@@ -47,7 +69,7 @@ class TinyServer(Server):
 
     def Connected(self, channel, addr):
         if self.p1 is not None and self.p2 is not None:
-            channel.Send({"action": "init", "p": "full"})  # TODO: Make sure client handles this
+            channel.Send({"action": "init", "p": "full"})
         else:
             self.AddPlayer(channel)
 
@@ -55,9 +77,11 @@ class TinyServer(Server):
         # Determine if P1 or P2
         if self.p1 is None and self.p2 is None:
             self.p1 = player
+            player.p1 = True
             print "New P1 (" + str(player.addr) + ")"
         elif self.p1 is not None and self.p2 is None:
             self.p2 = player
+            player.p1 = False
             print "New P2 (" + str(player.addr) + ")"
         else:
             sys.stderr.write("ERROR: Couldn't determine player from client.\n")
@@ -70,9 +94,11 @@ class TinyServer(Server):
         # Else if P2, notify P2 and send position data
         else:
             self.p2.Send({"action": "init", "p": 'p2'})
-            player.SendToAll({"action": "init", "s": 'ready'})
+            self.SendToAll({"action": "ready"})
+            self.ready = True
 
     def DelPlayer(self, player):
+        self.ready = False
         if self.p1 is player:
             self.p1 = None
             # TODO: Send message to P2 that P1 has left
@@ -84,6 +110,40 @@ class TinyServer(Server):
         else:
             print("ERROR: Can't delete player")
 
+    def HandleBullets(self):
+        for player in {self.p1, self.p2}:
+            # Check if there are bullets (if all bullets are cleared, still should update screen to clear bullets)
+            player_had_bullets = True if player.bullets else False
+
+            # Do collision detection
+            bullet_list = self.HandlePlayerBullet(player)
+
+            # Send new bullet lists (can't use sets because of rencode.py)
+            if bullet_list or player_had_bullets:
+                self.SendToAll({"action": "bullets", "p": player.WhichPlayer(), "bullets": bullet_list})
+
+    def HandlePlayerBullet(self, player):
+        bullet_locs = list()
+        player.bullets.update()
+        for bullet in player.bullets:
+            # See if it hit a player
+            # player_hit_list = pygame.sprite.spritecollide(bullet, player.bullets, False)
+
+            # For each block hit, remove the bullet and add to the score
+            # for player in player_hit_list:
+            #     player.bullets.remove(bullet)
+            #     break
+
+            # # Remove the bullet if it flies off the screen
+            if bullet.rect.x < 5 or bullet.rect.x > (X_DIM - 5):
+                player.bullets.remove(bullet)
+                break
+
+            # If we're here, bullet is still moving and should be sent to clients
+            bullet_locs.append((bullet.rect.x, bullet.rect.y))
+
+        return bullet_locs
+
     def SendToAll(self, data):
         if self.p1 is not None:
             self.p1.Send(data)
@@ -93,7 +153,12 @@ class TinyServer(Server):
     def Launch(self):
         while True:
             self.Pump()
-            sleep(0.0001)
+            if self.ready:
+                self.HandleBullets()
+            sleep(0.01)  # 0.001, 0.0001?
+
+# Quit PyGame window as soon as server starts (need a better way to do this, or implement a status GUI!)
+pygame.display.quit()
 
 # get command line argument of server, port
 if len(sys.argv) != 2:

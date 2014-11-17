@@ -1,6 +1,5 @@
 import sys
 from time import sleep
-
 from PodSixNet.Connection import connection, ConnectionListener
 from tinySpaceBattles import TinySpaceBattles
 
@@ -60,6 +59,7 @@ class Client(ConnectionListener, TinySpaceBattles):
     ###############################
 
     def Network_init(self, data):
+        print(data)
         if data["p"] == 'p1':
             self.is_p1 = True
             print("No other players currently connected. You are P1.")
@@ -71,14 +71,24 @@ class Client(ConnectionListener, TinySpaceBattles):
             sys.stderr.flush()
             sys.exit(1)
 
+    def Network_ready(self, data):
+        self.playersLabel = "Battle!"
+
     def Network_move(self, data):
         if data['pp_data']['p1'] is not None:
             self.P1_update(data['pp_data']['p1'])
         if data['pp_data']['p2'] is not None:
             self.P2_update(data['pp_data']['p2'])
 
+    def Network_bullets(self, data):
+        if data['p'] == "p1":
+            p1 = True
+        else:
+            p1 = False
+        self.Bullet_update(data['bullets'], p1)
+
     def Network(self, data):
-        print 'network:', data
+        # print 'network:', data
         pass
 
     ########################################
@@ -97,6 +107,7 @@ class Client(ConnectionListener, TinySpaceBattles):
 
     def Network_disconnected(self, data):
         self.statusLabel = "Disconnected"
+        self.playersLabel = "No other players"
 
 if len(sys.argv) != 2:
     print "Usage:", sys.argv[0], "host:port"
