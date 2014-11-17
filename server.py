@@ -1,7 +1,7 @@
 import sys
 import pygame
 from time import sleep
-from tinySpaceBattles import Bullet
+from tinySpaceBattles import Bullet, Starship
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
@@ -18,7 +18,9 @@ class ServerChannel(Channel):
         Channel.__init__(self, *args, **kwargs)
         self.id = str(self._server.NextId())
         self.player_pos = [0, 0]
+        self.hit_count = 0
         self.p1 = None
+        self.sprite = Starship()  # Each player needs a sprite representation
         self.bullets = pygame.sprite.Group()  # Each player has their own list of bullets
 
     def WhichPlayer(self):
@@ -60,6 +62,7 @@ class TinyServer(Server):
         self.p1 = None
         self.p2 = None
         self.ready = False
+        self.player_list = pygame.sprite.Group()
         print 'Server launched'
 
     def NextId(self):
@@ -94,7 +97,8 @@ class TinyServer(Server):
         else:
             self.p2.Send({"action": "init", "p": 'p2'})
             self.SendToAll({"action": "ready"})
-            self.SendToAll({"action": "move", "pp_data": dict({'p1': self.p1.player_pos, 'p2': self.p2.player_pos})})
+            # Only send position data from P1 -> P2
+            self.SendToAll({"action": "move", "pp_data": dict({'p1': self.p1.player_pos, 'p2': None})})
             self.ready = True
 
     def DelPlayer(self, player):
@@ -127,12 +131,12 @@ class TinyServer(Server):
         player.bullets.update()
         for bullet in player.bullets:
             # See if it hit a player
-            # player_hit_list = pygame.sprite.spritecollide(bullet, player.bullets, False)
+            player_hit_list = pygame.sprite.spritecollide(bullet, self.player_list, False)
 
             # For each block hit, remove the bullet and add to the score
-            # for player in player_hit_list:
-            #     player.bullets.remove(bullet)
-            #     break
+            for player in player_hit_list:
+                player.bullets.remove(bullet)
+                break
 
             # # Remove the bullet if it flies off the screen
             if bullet.rect.x < 5 or bullet.rect.x > (X_DIM - 5):
