@@ -71,6 +71,9 @@ class Client(ConnectionListener, TinySpaceBattles):
             sys.stderr.flush()
             sys.exit(1)
 
+        # Send position to server
+        self.Send_action('move')
+
     def Network_ready(self, data):
         self.playersLabel = "Battle!"
 

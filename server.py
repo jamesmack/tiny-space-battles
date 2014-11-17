@@ -36,7 +36,7 @@ class ServerChannel(Channel):
     ##################################
 
     def Network_move(self, data):
-        if self.p1 is True:
+        if self.p1:
             self.player_pos = data['pp_data']['p1']
         else:
             self.player_pos = data['pp_data']['p2']
@@ -50,7 +50,6 @@ class ServerChannel(Channel):
         bullet.rect.y = self.player_pos[1]+15
         # Add the bullet to the list
         self.bullets.add(bullet)
-        print("Player fired!")
 
 class TinyServer(Server):
     channelClass = ServerChannel
@@ -95,6 +94,7 @@ class TinyServer(Server):
         else:
             self.p2.Send({"action": "init", "p": 'p2'})
             self.SendToAll({"action": "ready"})
+            self.SendToAll({"action": "move", "pp_data": dict({'p1': self.p1.player_pos, 'p2': self.p2.player_pos})})
             self.ready = True
 
     def DelPlayer(self, player):
