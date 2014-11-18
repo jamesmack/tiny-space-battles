@@ -127,9 +127,11 @@ class TinySpaceBattles:
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
+        self.healthLabel = "Not hit"
         self.frame = 0
         self.down = False
         self.all_sprites_list = pygame.sprite.Group()
+        self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
         self.p1 = Starship()
         self.p1.set_p1(True)
         self.p2 = Starship()
@@ -168,24 +170,23 @@ class TinySpaceBattles:
         self.all_sprites_list.empty()
         self.all_sprites_list.add(self.p1)
         self.all_sprites_list.add(self.p2)
+        self.all_sprites_list.add(self.bullet_list)
 
-        self.all_sprites_list.add(self.p1.bullets)
-        self.all_sprites_list.add(self.p2.bullets)
+    def Update_health(self, hit_count):
+        # Placeholder for health
+        if hit_count > 0:
+            self.healthLabel = "Hit " + str(hit_count) + " times"
+            print(self.healthLabel)
 
-    def Bullet_update(self, bullets, p1):
-        bullet_group = pygame.sprite.Group()
+    def Update_bullets(self, bullets):
+        self.bullet_list.empty()
         for loc in bullets:
             bullet = Bullet()
-            bullet.right = True if p1 else False
-            # Set the bullet so it is where the player is
+            # Set the bullet's position
             bullet.rect.x = loc[0]
             bullet.rect.y = loc[1]
             # Add the bullet to the list
-            bullet_group.add(bullet)
-        if p1:
-            self.p1.bullets = bullet_group
-        else:
-            self.p2.bullets = bullet_group
+            self.bullet_list.add(bullet)
 
     def Check_for_button_held(self):
         if self.wiimote is not None:
@@ -219,10 +220,9 @@ class TinySpaceBattles:
 
     def Draw(self):
         screen.fill(WHITE)
-        txt = fnt.render(self.statusLabel, 1, (0, 0, 0))
         screen.blit(fnt.render(self.statusLabel, 1, (0, 0, 0)), [10, 10])
-        txt = fnt.render(self.playersLabel, 1, (0, 0, 0))
         screen.blit(fnt.render(self.playersLabel, 1, (0, 0, 0)), [10, 20])
+        screen.blit(fnt.render(self.healthLabel, 1, (0, 0, 0)), [10, 30])
         self.Recreate_sprite_lists()
         self.all_sprites_list.draw(screen)
         pygame.display.flip()

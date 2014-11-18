@@ -84,11 +84,11 @@ class Client(ConnectionListener, TinySpaceBattles):
             self.P2_update(data['pp_data']['p2'])
 
     def Network_bullets(self, data):
-        if data['p'] == "p1":
-            p1 = True
+        self.Update_bullets(data['bullets'])
+        if self.is_p1:
+            self.Update_health(data['p1_hit'])
         else:
-            p1 = False
-        self.Bullet_update(data['bullets'], p1)
+            self.Update_health(data['p2_hit'])
 
     def Network(self, data):
         # print 'network:', data
