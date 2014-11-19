@@ -1,12 +1,13 @@
 import sys
+import os
 import pygame
 from time import sleep
 from tinySpaceBattles import Bullet, Starship
 from PodSixNet.Server import Server
 from PodSixNet.Channel import Channel
 
-X_DIM = 640
-Y_DIM = 480
+X_DIM = 1000
+Y_DIM = 700
 SCREENSIZE = (X_DIM, Y_DIM)
 
 
@@ -182,10 +183,12 @@ class TinyServer(Server):
             self.Pump()
             if self.ready:
                 self.HandleBullets()
-            sleep(0.01)  # 0.001, 0.0001?
+            sleep(0.001)  # 0.01, 0.0001?
 
-# Quit PyGame window as soon as server starts (need a better way to do this, or implement a status GUI!)
-pygame.display.quit()
+# Assign dummy SDL screen and init headless PyGame
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+pygame.init()
+screen = pygame.display.set_mode((1, 1))
 
 # get command line argument of server, port
 if len(sys.argv) != 2:

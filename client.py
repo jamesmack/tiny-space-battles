@@ -8,6 +8,7 @@ class Client(ConnectionListener, TinySpaceBattles):
     def __init__(self, host, port):
         self.Connect((host, port))
         self.player_loc = dict()
+        self.ready = False
         TinySpaceBattles.__init__(self)
 
     def Loop(self):
@@ -49,10 +50,12 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.Send_action('move', add_pos)
 
     def Player_fire(self):
-        self.Send_action('fire')
+        if self.ready:
+            self.Send_action('fire')
 
     def Player_shield(self):
-        self.Send_action('shield')
+        if self.ready:
+            self.Send_action('shield')
 
     ###############################
     ### Network event callbacks ###
@@ -76,6 +79,7 @@ class Client(ConnectionListener, TinySpaceBattles):
 
     def Network_ready(self, data):
         self.playersLabel = "Battle!"
+        self.ready = True
 
     def Network_move(self, data):
         if data['pp_data']['p1'] is not None:
@@ -102,6 +106,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.statusLabel = "Connected"
 
     def Network_error(self, data):
+        self.ready = False
         print data
         import traceback
         traceback.print_exc()
@@ -111,6 +116,7 @@ class Client(ConnectionListener, TinySpaceBattles):
     def Network_disconnected(self, data):
         self.statusLabel = "Disconnected"
         self.playersLabel = "No other players"
+        self.ready = False
 
 if len(sys.argv) != 2:
     print "Usage:", sys.argv[0], "host:port"

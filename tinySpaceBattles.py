@@ -10,8 +10,8 @@ GREEN = (0, 255,   0)
 RED = (255,   0,   0)
 BLUE = (0,   0, 255)
 
-X_DIM = 640
-Y_DIM = 480
+X_DIM = 1000
+Y_DIM = 700
 SCREENSIZE = (X_DIM, Y_DIM)
 
 wiimote_move = {0: 'l',  # D-pad left
@@ -108,7 +108,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.Surface([10, 3])
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.bullet_speed = 10
+        self.bullet_speed = 1
         self.right = True
 
     def update(self):
