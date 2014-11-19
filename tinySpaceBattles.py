@@ -38,6 +38,7 @@ environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
 pygame.display.set_caption("Tiny Space Battles")
+background_image = pygame.image.load("images/bg.png")
 
 pygame.font.init()
 fnt = pygame.font.SysFont("Arial", 14)
@@ -59,26 +60,32 @@ class Starship(pygame.sprite.Sprite):
         self.rect.y = randrange(200, 300)
         self.bullets = pygame.sprite.Group()
 
-
     def set_colour(self, colour):
         self.colour = colour
         self.image.fill(self.colour)
         self.rect = self.image.get_rect()
 
+    def set_graphic(self, p1):
+        if p1:
+            self.image = pygame.image.load("images/p1.png")
+        else:
+            self.image = pygame.image.load("images/p2.png")
+        self.image.convert_alpha()
+        self.rect = self.image.get_rect()
 
     def set_p1(self, p1):
         """ Set True for P1, False for P2. """
         if p1:
-            self.set_colour(BLUE)
-            self.set_loc(randrange(0, 50), randrange(200, 300))
+            self.set_graphic(True)
+            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
         else:
             self.set_p2(True)
 
     def set_p2(self, p2):
         """ Set True for P2, False for P1. """
         if p2:
-            self.set_colour(RED)
-            self.set_loc(randrange(550, 600), randrange(200, 300))
+            self.set_graphic(False)
+            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
         else:
             self.set_p1(True)
 
@@ -219,10 +226,10 @@ class TinySpaceBattles:
 
 
     def Draw(self):
-        screen.fill(WHITE)
-        screen.blit(fnt.render(self.statusLabel, 1, (0, 0, 0)), [10, 10])
-        screen.blit(fnt.render(self.playersLabel, 1, (0, 0, 0)), [10, 20])
-        screen.blit(fnt.render(self.healthLabel, 1, (0, 0, 0)), [10, 30])
+        screen.blit(background_image, [0, 0])
+        screen.blit(fnt.render(self.statusLabel, 1, WHITE), [10, 5])
+        screen.blit(fnt.render(self.playersLabel, 1, WHITE), [10, 20])
+        screen.blit(fnt.render(self.healthLabel, 1, WHITE), [10, 35])
         self.Recreate_sprite_lists()
         self.all_sprites_list.draw(screen)
         pygame.display.flip()

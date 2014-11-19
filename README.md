@@ -27,4 +27,5 @@ This is my final project for the CENG 356 class at the University of Victoria, t
     * Move up, down, right, left - D-pad
 
 ## Credits
-http://millionthvector.blogspot.ca/p/free-sprites.html for sprites
+* [Starship sprites](http://millionthvector.blogspot.ca/p/free-sprites.html)
+* [Space background](http://opengameart.org/content/space)
