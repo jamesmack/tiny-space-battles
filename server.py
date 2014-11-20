@@ -1,6 +1,7 @@
 import sys
 import os
 import pygame
+from collections import deque
 from time import sleep
 from tinySpaceBattles import Bullet, Starship
 from PodSixNet.Server import Server
@@ -72,7 +73,7 @@ class TinyServer(Server):
         self.p1 = None
         self.p2 = None
         self.ready = False
-        self.player_list = pygame.sprite.Group()
+        self.waiting_player_list = deque()  # Make a FIFO queue for waiting clients (no limit to waiting clients)
         print 'Server launched'
 
     def NextId(self):
@@ -80,26 +81,28 @@ class TinyServer(Server):
         return self.id
 
     def Connected(self, channel, addr):
-        if self.p1 is not None and self.p2 is not None:
+        if self.p1 and self.p2:
             channel.Send({"action": "init", "p": "full"})
+            self.waiting_player_list.append(channel)
         else:
             self.AddPlayer(channel)
 
     def AddPlayer(self, player):
         # Determine if P1 or P2
-        if self.p1 is None and self.p2 is None:
+        if self.p1 is None:
             self.p1 = player
             player.p1 = True
             print "New P1 (" + str(player.addr) + ")"
-        elif self.p1 is not None and self.p2 is None:
+        elif self.p1 and self.p2 is None:
             self.p2 = player
             player.p1 = False
             print "New P2 (" + str(player.addr) + ")"
         else:
-            sys.stderr.write("ERROR: Couldn't determine player from client.\n")
+            sys.stderr.write("ERROR: Couldn't determine player from client (P1 = "
+                             + str(self.p1) + ",  P2 = "
+                             + str(self.p2) + ".\n")
             sys.stderr.flush()
             sys.exit(1)
-
         # If only P1, tell client they're P1
         if self.p2 is None:
             player.Send({"action": "init", "p": 'p1'})
@@ -115,14 +118,19 @@ class TinyServer(Server):
         self.ready = False
         if self.p1 is player:
             self.p1 = None
-            # TODO: Send message to P2 that P1 has left
+            self.SendToAll({"action": "player_left"})
             print "Deleted P1 (" + str(player.addr) + ")"
         elif self.p2 is player:
             self.p2 = None
-            # TODO: Send message to P1 that P2 has left
+            self.SendToAll({"action": "player_left"})
             print "Deleted P2 (" + str(player.addr) + ")"
+        elif player in self.waiting_player_list:
+            self.waiting_player_list.remove(player)
         else:
             print("ERROR: Can't delete player")
+        # Pull waiting player from queue
+        if self.waiting_player_list:
+            self.AddPlayer(self.waiting_player_list.popleft())
 
     def HandleBullets(self):
         # Check if there are bullets (if all bullets are cleared, still should update screen to clear bullets)

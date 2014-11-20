@@ -62,24 +62,31 @@ class Client(ConnectionListener, TinySpaceBattles):
     ###############################
 
     def Network_init(self, data):
-        print(data)
         if data["p"] == 'p1':
             self.is_p1 = True
             print("No other players currently connected. You are P1.")
+            # Send position to server
+            self.Send_action('move')
         elif data["p"] == 'p2':
             self.is_p1 = False
             print('You are P2. The game will start momentarily.')
+            # Send position to server
+            self.Send_action('move')
+        elif data["p"] == 'full':
+            print('Server is full. You have been placed in a waiting queue.')
+            self.playersLabel = "Waiting for free slot in server"
         else:
             sys.stderr.write("ERROR: Couldn't determine player from server.\n")
             sys.stderr.flush()
             sys.exit(1)
 
-        # Send position to server
-        self.Send_action('move')
-
     def Network_ready(self, data):
         self.playersLabel = "Battle!"
         self.ready = True
+
+    def Network_player_left(self, data):
+        self.playersLabel = "Other player left server"
+        self.ready = False
 
     def Network_move(self, data):
         if data['pp_data']['p1'] is not None:
