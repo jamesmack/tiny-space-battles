@@ -39,6 +39,8 @@ pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
 pygame.display.set_caption("Tiny Space Battles")
 background_image = pygame.image.load("images/bg.png")
+healthbar = pygame.image.load("images/healthbar.png")
+healthbar_slices = pygame.image.load("images/health.png")
 
 pygame.font.init()
 fnt = pygame.font.SysFont("Arial", 14)
@@ -59,6 +61,7 @@ class Starship(pygame.sprite.Sprite):
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
         self.bullets = pygame.sprite.Group()
+        self.health = 194
 
     def set_colour(self, colour):
         self.colour = colour
@@ -134,7 +137,6 @@ class TinySpaceBattles(object):
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
-        self.healthLabel = "Not hit"
         self.frame = 0
         self.down = False
         self.all_sprites_list = pygame.sprite.Group()
@@ -179,11 +181,8 @@ class TinySpaceBattles(object):
         self.all_sprites_list.add(self.p2)
         self.all_sprites_list.add(self.bullet_list)
 
-    def Update_health(self, hit_count):
-        # Placeholder for health
-        if hit_count > 0:
-            self.healthLabel = "Hit " + str(hit_count) + " times"
-            print(self.healthLabel)
+    def Win_or_lose(self, win):
+        pass
 
     def Update_bullets(self, bullets):
         self.bullet_list.empty()
@@ -226,10 +225,26 @@ class TinySpaceBattles(object):
 
 
     def Draw(self):
+        #Draw background image
         screen.blit(background_image, [0, 0])
-        screen.blit(fnt.render(self.statusLabel, 1, WHITE), [10, 5])
-        screen.blit(fnt.render(self.playersLabel, 1, WHITE), [10, 20])
-        screen.blit(fnt.render(self.healthLabel, 1, WHITE), [10, 35])
+
+        # P1 health
+        screen.blit(healthbar, [5, 5])
+        for health_increments in range(self.p1.health):
+            screen.blit(healthbar_slices, (health_increments + 8, 8))
+        screen.blit(fnt.render("P1 health", 1, BLACK), [10, 7])
+
+        # P2 health
+        screen.blit(healthbar, [X_DIM - 5 - 200, 5])
+        for health_increments in range(self.p2.health):
+            screen.blit(healthbar_slices, (X_DIM - health_increments + 8 - 17, 8))
+        screen.blit(fnt.render("P2 health", 1, BLACK), [X_DIM - 10 - 60, 7])
+
+        # Draw connection and player status
+        screen.blit(fnt.render(self.statusLabel, 1, WHITE), [10, 25])
+        screen.blit(fnt.render(self.playersLabel, 1, WHITE), [10, 40])
+
+        # Draw players and bullets
         self.Recreate_sprite_lists()
         self.all_sprites_list.draw(screen)
         pygame.display.flip()

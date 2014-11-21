@@ -20,7 +20,6 @@ class ServerChannel(object, Channel):
         Channel.__init__(self, *args, **kwargs)
         self.id = str(self._server.NextId())
         self._player_pos = [0, 0]
-        self.hit_count = 0
         self.p1 = None
         self.sprite = Starship()  # Each player needs a sprite representation
         self.bullets = pygame.sprite.Group()  # Each player has their own list of bullets
@@ -157,8 +156,8 @@ class TinyServer(object, Server):
         if bullet_list or player_had_bullets:
             self.SendToAll({"action": "bullets",
                             "bullets": bullet_list,
-                            "p1_hit": self.p1.hit_count,
-                            "p2_hit": self.p2.hit_count})
+                            "p1_health": self.p1.sprite.health,
+                            "p2_health": self.p2.sprite.health})
 
     def GenerateBulletLocs(self):
         bullet_locs = list()
@@ -181,9 +180,9 @@ class TinyServer(object, Server):
         # Perform collision detection
         bullets_hit = pygame.sprite.spritecollide(player.sprite, other_player.bullets, False)
 
-        # For each block hit, add to player's hit count
+        # For each block hit, subtract health
         for bullet in bullets_hit:
-            player.hit_count += 1
+            player.sprite.health -= 10
             bullet.kill()
 
     def SendToAll(self, data):

@@ -9,7 +9,6 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.Connect((host, port))
         self.player_loc = dict()
         self.ready = False
-        self.hit_count = 0
         TinySpaceBattles.__init__(self)
 
     def Loop(self):
@@ -97,14 +96,8 @@ class Client(ConnectionListener, TinySpaceBattles):
 
     def Network_bullets(self, data):
         self.Update_bullets(data['bullets'])
-        if self.is_p1:
-            if data['p1_hit'] != self.hit_count:
-                self.hit_count = data['p1_hit']
-                self.Update_health(self.hit_count)
-        else:
-            if data['p2_hit'] != self.hit_count:
-                self.hit_count = data['p2_hit']
-                self.Update_health(self.hit_count)
+        self.p1.health = data['p1_health']
+        self.p2.health = data['p2_health']
 
     def Network(self, data):
         # print 'network:', data
