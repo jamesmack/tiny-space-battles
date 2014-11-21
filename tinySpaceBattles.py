@@ -61,6 +61,10 @@ class Starship(pygame.sprite.Sprite):
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
         self.bullets = pygame.sprite.Group()
+        self.health = 0
+        self.reset_health()
+
+    def reset_health(self):
         self.health = 194
 
     def set_colour(self, colour):

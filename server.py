@@ -69,6 +69,9 @@ class ServerChannel(object, Channel):
         # Add the bullet to the list
         self.bullets.add(bullet)
 
+    def Network_restart(self, data):
+        self._server.Restart()
+
 class TinyServer(object, Server):
     channelClass = ServerChannel
 
@@ -158,6 +161,26 @@ class TinyServer(object, Server):
                             "bullets": bullet_list,
                             "p1_health": self.p1.sprite.health,
                             "p2_health": self.p2.sprite.health})
+
+        # If any of the players have died, let both players know
+        if self.p1.sprite.health <= 0 or not self.p2.sprite.health <= 0:
+            self.HandleDeath()
+
+    def HandleDeath(self):
+        if self.p1.sprite.health <= 0:
+            dead = self.p1.WhichPlayer()
+        else:
+            dead = self.p2.WhichPlayer()
+        # Send message to clients that a player has died
+        self.SendToAll({"action": "death", "p": dead})
+        self.ready = False
+
+    def Restart(self):
+        if self.p1 and self.p2:
+            self.p1.sprite.reset_health()
+            self.p2.sprite.reset_health()
+            self.SendToAll({"action": "restart"})  # TODO: Add functionality to clients
+            self.ready = True
 
     def GenerateBulletLocs(self):
         bullet_locs = list()
