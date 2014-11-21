@@ -32,7 +32,6 @@ class ServerChannel(object, Channel):
     @player_pos.setter
     def player_pos(self, value):
         self.sprite.set_loc(value[0], value[1])
-        print(self.sprite.get_loc())
         self._player_pos = value
 
     def WhichPlayer(self):
