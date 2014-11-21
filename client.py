@@ -15,13 +15,15 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.Pump()
         connection.Pump()
         self.Events()
-        self.Check_for_button_held()
+        self.Check_for_wiimote_move()
         self.Draw()
 
         if "Connecting" in self.statusLabel:
             self.statusLabel = "Connecting" + ("." * ((self.frame / 30) % 4))
 
     def Send_action(self, action, loc_add=None):
+        if self.is_p1 is None:
+            return
         if self.is_p1:
             loc = self.p1.get_loc()
             if loc_add is not None:
@@ -37,16 +39,16 @@ class Client(ConnectionListener, TinySpaceBattles):
     ### Event callbacks ###
     #######################
 
-    def Player_move(self, direction):
+    def Player_move(self, direction, x_mag=1, y_mag=1):
         add_pos = [0, 0]
         if 'l' in direction:
-            add_pos[0] -= 5
-        elif 'r' in direction:
-            add_pos[0] += 5
-        elif 'u' in direction:
-            add_pos[1] -= 5
-        elif 'd' in direction:
-            add_pos[1] += 5
+            add_pos[0] -= 8*x_mag
+        if 'r' in direction:
+            add_pos[0] += 8*x_mag
+        if 'u' in direction:
+            add_pos[1] -= 8*y_mag
+        if 'd' in direction:
+            add_pos[1] += 8*y_mag
         self.Send_action('move', add_pos)
 
     def Player_fire(self):
@@ -100,7 +102,8 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.p2.health = data['p2_health']
 
     def Network_death(self, data):
-        print("Player is dead") # TODO: improve this...
+        print(data)
+        print("A player has died") # TODO: improve this...
 
     def Network(self, data):
         # print 'network:', data

@@ -163,14 +163,16 @@ class TinyServer(object, Server):
                             "p2_health": self.p2.sprite.health})
 
         # If any of the players have died, let both players know
-        if self.p1.sprite.health <= 0 or not self.p2.sprite.health <= 0:
+        if self.p1.sprite.health <= 0 or self.p2.sprite.health <= 0:
             self.HandleDeath()
 
     def HandleDeath(self):
         if self.p1.sprite.health <= 0:
             dead = self.p1.WhichPlayer()
+            print("P1 has died")
         else:
             dead = self.p2.WhichPlayer()
+            print("P2 has died")
         # Send message to clients that a player has died
         self.SendToAll({"action": "death", "p": dead})
         self.ready = False

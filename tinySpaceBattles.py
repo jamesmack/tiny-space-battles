@@ -14,15 +14,19 @@ X_DIM = 1000
 Y_DIM = 700
 SCREENSIZE = (X_DIM, Y_DIM)
 
+# Nunchuck joystick threshold
+JOY_THRESH = 0.08
+
 wiimote_move = {0: 'l',  # D-pad left
                 1: 'r',  # D-pad right
                 2: 'u',  # D-pad up
-                3: 'd'  # D-pad down
-                }
+                3: 'd'}  # D-pad down
 
-wiimote_shield = {4: 's'}  # A button
+wiimote_shield = {4: 's',   # A button
+                  11: 's'}  # C button (Nunchuck)
 
-wiimote_fire = {5: 'f'}  # B button
+wiimote_fire = {12: 'f',  # Z button (Nunchuck)
+                5: 'f'}   # B button
 
 keyboard_move = {pygame.K_a: 'l',  # a
                  pygame.K_d: 'r',  # d
@@ -198,11 +202,37 @@ class TinySpaceBattles(object):
             # Add the bullet to the list
             self.bullet_list.add(bullet)
 
-    def Check_for_button_held(self):
+    def Check_for_wiimote_move(self):
         if self.wiimote is not None:
+            move = set()
+
+            # Handle Nunchuck joystick
+            axis_0 = self.wiimote.get_axis(0)
+            axis_1 = self.wiimote.get_axis(1)
+            y_mag = 0
+            x_mag = 0
+            if abs(axis_0) > JOY_THRESH:
+                x_mag = axis_0
+                if axis_0 > JOY_THRESH:
+                    move.add('r')
+                else:
+                    move.add('l')
+            if abs(axis_1) > JOY_THRESH:
+                y_mag = axis_1
+                if axis_1 > JOY_THRESH:
+                    move.add('d')
+                else:
+                    move.add('u')
+            if x_mag or y_mag:
+                self.Player_move(move, pow(x_mag, 2), pow(y_mag, 2))
+
+            # Handle Wiimote D-Pad here
+            move.clear()
             for button in xrange(0, 4):
                 if self.wiimote.get_button(button):
-                    self.Player_move(wiimote_move[button])
+                    move.add(wiimote_move[button])
+            if move:
+                self.Player_move(move)
 
     def Events(self):
         for event in pygame.event.get():
