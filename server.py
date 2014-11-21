@@ -12,7 +12,7 @@ Y_DIM = 700
 SCREENSIZE = (X_DIM, Y_DIM)
 
 
-class ServerChannel(Channel):
+class ServerChannel(object, Channel):
     """
     This is the server representation of a single connected client.
     """
@@ -32,6 +32,7 @@ class ServerChannel(Channel):
     @player_pos.setter
     def player_pos(self, value):
         self.sprite.set_loc(value[0], value[1])
+        print(self.sprite.get_loc())
         self._player_pos = value
 
     def WhichPlayer(self):
@@ -59,12 +60,18 @@ class ServerChannel(Channel):
         bullet = Bullet()
         bullet.right = self.p1  # True when P1 (right), False when P2 (left)
         # Set the bullet so it is where the player is
-        bullet.rect.x = self.player_pos[0]+15
-        bullet.rect.y = self.player_pos[1]+15
+        bullet.rect.x = self.player_pos[0]
+        bullet.rect.y = self.player_pos[1]
+        # Adjust the bullet's position so that it looks a little better
+        if self.p1:
+            bullet.rect.x += 105
+            bullet.rect.y += 37
+        else:
+            bullet.rect.y += 37
         # Add the bullet to the list
         self.bullets.add(bullet)
 
-class TinyServer(Server):
+class TinyServer(object, Server):
     channelClass = ServerChannel
 
     def __init__(self, *args, **kwargs):
@@ -141,8 +148,8 @@ class TinyServer(Server):
         self.p2.bullets.update()
 
         # Do collision detection
-        # self.HandleBulletHits(self.p1) #TODO: No collision detection until graphics implemented
-        # self.HandleBulletHits(self.p2)
+        self.HandleBulletHits(self.p1)
+        self.HandleBulletHits(self.p2)
 
         # Generate position list
         bullet_list = self.GenerateBulletLocs()
@@ -158,27 +165,27 @@ class TinyServer(Server):
         bullet_locs = list()
         for player in {self.p1, self.p2}:
             for bullet in player.bullets:
-                # # Remove the bullet if it flies off the screen
+                # Remove the bullet if it flies off the screen
                 if bullet.rect.x < 5 or bullet.rect.x > (X_DIM - 5):
-                    player.bullets.remove(bullet)
+                    bullet.kill()
                     break
                 # If we're here, bullet is still moving and should be sent to clients
                 bullet_locs.append((bullet.rect.x, bullet.rect.y))
-
         return bullet_locs
 
     def HandleBulletHits(self, player):
-        # See if any of the other player's bullets have hit the player's sprite - if yes, remove the hit bullets
         if player.p1:
-            bullet_hit_list = pygame.sprite.spritecollide(player.sprite, self.p2.bullets, True)
+            other_player = self.p2
         else:
-            print("Pre: " + str(self.p1.bullets))
-            bullet_hit_list = pygame.sprite.spritecollide(player.sprite, self.p1.bullets, True)
-            print("Post: " + str(self.p1.bullets))
+            other_player = self.p1
+
+        # Perform collision detection
+        bullets_hit = pygame.sprite.spritecollide(player.sprite, other_player.bullets, False)
 
         # For each block hit, add to player's hit count
-        for bullet in bullet_hit_list:
+        for bullet in bullets_hit:
             player.hit_count += 1
+            bullet.kill()
 
     def SendToAll(self, data):
         if self.p1 is not None:

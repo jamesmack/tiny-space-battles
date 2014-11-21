@@ -52,7 +52,7 @@ class Starship(pygame.sprite.Sprite):
         """ Set up the player on creation. """
         # Call the parent class (Sprite) constructor
         super(Starship, self).__init__()
-        self.image = pygame.Surface([30, 30])
+        self.image = pygame.Surface([120, 75])
         self.colour = BLACK
         self.image.fill(self.colour)
         self.rect = self.image.get_rect()
@@ -130,7 +130,7 @@ class Bullet(pygame.sprite.Sprite):
         return [self.rect.x, self.rect.y]
 
 
-class TinySpaceBattles:
+class TinySpaceBattles(object):
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
