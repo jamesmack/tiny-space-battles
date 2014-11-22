@@ -61,6 +61,7 @@ class Starship(pygame.sprite.Sprite):
         self.image = pygame.Surface([120, 75])
         self.colour = BLACK
         self.image.fill(self.colour)
+        self.image_orig = self.image
         self.rect = self.image.get_rect()
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
@@ -70,6 +71,9 @@ class Starship(pygame.sprite.Sprite):
 
     def reset_health(self):
         self.health = 194
+
+    def rotate(self, angle):
+        self.image = pygame.transform.rotate(self.image_orig, angle)
 
     def set_colour(self, colour):
         self.colour = colour
@@ -81,6 +85,7 @@ class Starship(pygame.sprite.Sprite):
             self.image = pygame.image.load("images/p1.png")
         else:
             self.image = pygame.image.load("images/p2.png")
+        self.image_orig = self.image
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
 
