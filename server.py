@@ -30,7 +30,8 @@ class ServerChannel(object, Channel):
 
     @player_pos.setter
     def player_pos(self, value):
-        self.sprite.set_loc(value[0], value[1])
+        self.sprite.update(value)
+        # self._player_pos = self.sprite.get_loc() # TODO Should use this
         self._player_pos = value
 
     def WhichPlayer(self):
@@ -48,10 +49,18 @@ class ServerChannel(object, Channel):
     ##################################
 
     def Network_move(self, data):
-        if self.p1:
-            self.player_pos = data['pp_data']['p1']
-        else:
-            self.player_pos = data['pp_data']['p2']
+        print(data)
+        if self.p1 and data['p'] == 'p1':
+            self.player_pos = data['p_pos']
+        elif not self.p1 and data['p'] == 'p2':
+            self.player_pos = data['p_pos']
+        # else:
+        #     sys.stderr.write("ERROR: Couldn't update player movement information.\n")
+        #     sys.stderr.write(str(data) + "\n")
+        #     sys.stderr.flush()
+        #     sys.exit(1)
+        data['p_pos'][0] = self.player_pos[0]
+        data['p_pos'][1] = self.player_pos[1]
         self.PassOn(data)
 
     def Network_fire(self, data):
@@ -119,7 +128,7 @@ class TinyServer(object, Server):
             self.p2.Send({"action": "init", "p": 'p2'})
             self.SendToAll({"action": "ready"})
             # Only send position data from P1 -> P2
-            self.SendToAll({"action": "move", "pp_data": dict({'p1': self.p1.player_pos, 'p2': None})})
+            self.SendToAll({"action": "move", "p": "p1", "p_pos": self.p1.player_pos})
             self.ready = True
 
     def DelPlayer(self, player):

@@ -17,10 +17,8 @@ SCREENSIZE = (X_DIM, Y_DIM)
 # Nunchuck joystick threshold
 JOY_THRESH = 0.08
 
-wiimote_move = {0: 'l',  # D-pad left
-                1: 'r',  # D-pad right
-                2: 'u',  # D-pad up
-                3: 'd'}  # D-pad down
+wiimote_move = {0: 'ccw',  # D-pad left
+                1: 'cw'}  # D-pad right
 
 wiimote_shield = {4: 's',   # A button
                   11: 's'}  # C button (Nunchuck)
@@ -31,7 +29,9 @@ wiimote_fire = {12: 'f',  # Z button (Nunchuck)
 keyboard_move = {pygame.K_a: 'l',  # a
                  pygame.K_d: 'r',  # d
                  pygame.K_w: 'u',  # w
-                 pygame.K_s: 'd'  # s
+                 pygame.K_s: 'd',  # s
+                 pygame.K_q: 'ccw',  # q
+                 pygame.K_e: 'cw'  # e
                  }
 
 keyboard_shield = {pygame.K_PERIOD: 's'}  # .
@@ -58,6 +58,8 @@ class Starship(pygame.sprite.Sprite):
         """ Set up the player on creation. """
         # Call the parent class (Sprite) constructor
         super(Starship, self).__init__()
+        self.health = 0
+        self.angle = 0
         self.image = pygame.Surface([120, 75])
         self.colour = BLACK
         self.image.fill(self.colour)
@@ -66,14 +68,22 @@ class Starship(pygame.sprite.Sprite):
         self.rect.x = randrange(0, 100)
         self.rect.y = randrange(200, 300)
         self.bullets = pygame.sprite.Group()
-        self.health = 0
         self.reset_health()
 
     def reset_health(self):
         self.health = 194
 
+    def update(self, loc):
+        [x, y, angle] = loc
+        self.set_loc(x, y)
+        if angle != self.angle:
+            self.rotate(angle)
+
     def rotate(self, angle):
+        new_center = self.rect.center
         self.image = pygame.transform.rotate(self.image_orig, angle)
+        self.rect = self.image.get_rect(center=new_center)
+        self.angle = angle
 
     def set_colour(self, colour):
         self.colour = colour
@@ -151,7 +161,6 @@ class TinySpaceBattles(object):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
         self.frame = 0
-        self.down = False
         self.all_sprites_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
         self.p1 = Starship()
@@ -163,7 +172,6 @@ class TinySpaceBattles(object):
 
         self.Player_init()
         self.Wiimote_init()
-
 
     def Wiimote_init(self):
         # Count the joysticks the computer has
@@ -180,19 +188,14 @@ class TinySpaceBattles(object):
         self.all_sprites_list.add(self.p1)
         self.all_sprites_list.add(self.p2)
 
-    def P1_update(self, loc):
-        [x, y] = loc
-        self.p1.set_loc(x, y)
-
-    def P2_update(self, loc):
-        [x, y] = loc
-        self.p2.set_loc(x, y)
-
-    def Recreate_sprite_lists(self):  # Need to find a better solution...
+    def Recreate_sprite_lists(self):
         self.all_sprites_list.empty()
         self.all_sprites_list.add(self.p1)
         self.all_sprites_list.add(self.p2)
         self.all_sprites_list.add(self.bullet_list)
+
+    def Which_player(self):
+        return str("p1") if self.is_p1 else str("p2")
 
     def Win_or_lose(self, win):
         pass
@@ -228,15 +231,14 @@ class TinySpaceBattles(object):
                     move.add('d')
                 else:
                     move.add('u')
-            if x_mag or y_mag:
-                self.Player_move(move, pow(x_mag, 2), pow(y_mag, 2))
 
             # Handle Wiimote D-Pad here
-            move.clear()
-            for button in xrange(0, 4):
+            for button in xrange(0, 2):
                 if self.wiimote.get_button(button):
                     move.add(wiimote_move[button])
-            if move:
+            if x_mag or y_mag:
+                self.Player_move(move, pow(x_mag, 2), pow(y_mag, 2))
+            elif move:
                 self.Player_move(move)
 
     def Events(self):
@@ -282,6 +284,8 @@ class TinySpaceBattles(object):
         # Draw connection and player status
         screen.blit(fnt.render(self.statusLabel, 1, WHITE), [10, 25])
         screen.blit(fnt.render(self.playersLabel, 1, WHITE), [10, 40])
+
+        pygame.draw.circle(screen, BLUE, (self.p1.rect.x, self.p1.rect.y), 10)
 
         # Draw players and bullets
         self.Recreate_sprite_lists()
