@@ -21,10 +21,16 @@ This is my final project for the CENG 356 class at the University of Victoria, t
     * Move left - a 
     * Move down - s
     * Move right - d
+    * Rotate ccw - q
+    * Rotate cw - e
   * Wiimote
     * Fire - B
     * Shield - A
-    * Move up, down, right, left - D-pad
+    * Rotate cw, ccw - D-pad right, left
+  * Nunchuck
+    * Fire - Z
+    * Shield - C
+    * Joystick - move
 
 ## Credits
 * [Starship sprites](http://millionthvector.blogspot.ca/p/free-sprites.html)
