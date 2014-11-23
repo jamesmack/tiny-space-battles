@@ -99,10 +99,12 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.ready = False
 
     def Network_move(self, data):
-        if data['p'] == 'p1':
-            self.p1.update(data['p_pos'])
-        elif data['p'] == 'p2':
-            self.p2.update(data['p_pos'])
+        position = data['p_pos']
+        player = data['p']
+        if player == 'p1':
+            self.p1.update(position)
+        elif player == 'p2':
+            self.p2.update(position)
         else:
             sys.stderr.write("ERROR: Couldn't update player movement information.\n")
             sys.stderr.write(str(data) + "\n")

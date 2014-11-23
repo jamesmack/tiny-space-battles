@@ -50,7 +50,7 @@ class ServerChannel(object, Channel):
 
     def Network_move(self, data):
         self.player_pos = data['p_pos']
-        data['p_pos'][0] = self.player_pos[0]
+        data['p_pos'][0] = self.player_pos[0]  # When rotated, the player's location will move slightly
         data['p_pos'][1] = self.player_pos[1]
         self.PassOn(data)
 
@@ -112,7 +112,9 @@ class TinyServer(object, Server):
             self.p2.Send({"action": "init", "p": 'p2'})
             self.SendToAll({"action": "ready"})
             # Only send position data from P1 -> P2
-            self.SendToAll({"action": "move", "p": "p1", "p_pos": self.p1.player_pos})
+            loc = list(self.p1.player_pos)
+            loc.append(self.p1.sprite.angle)
+            self.SendToAll({"action": "move", "p": "p1", "p_pos": loc})
             self.ready = True
 
     def DelPlayer(self, player):
