@@ -21,19 +21,21 @@ class Client(ConnectionListener, TinySpaceBattles):
         if "Connecting" in self.statusLabel:
             self.statusLabel = "Connecting" + ("." * ((self.frame / 30) % 4))
 
-    def Send_action(self, action, loc_add=None):
+    def Send_action(self, action, loc_add=(0, 0), angle_add=0):
         if self.is_p1 is None:
             return
         if self.is_p1:
-            loc = self.p1.get_loc()
-            if loc_add is not None:
-                loc = [x + y for x, y in zip(self.p1.get_loc(), loc_add)]
-            connection.Send({"action": action, "pp_data": dict({'p1': loc, 'p2': None})})
+            player = self.p1
         else:
-            loc = self.p2.get_loc()
-            if loc_add is not None:
-                loc = [x + y for x, y in zip(self.p2.get_loc(), loc_add)]
-            connection.Send({"action": action, "pp_data": dict({'p1': None, 'p2': loc})})
+            player = self.p2
+        loc = player.get_loc()
+        if loc_add:
+            loc = [x + y for x, y in zip(player.get_loc(), loc_add)]
+        if angle_add:
+            loc.append((angle_add + player.angle) % 360)
+        else:
+            loc.append(player.angle)
+        connection.Send({"action": action, "p": self.Which_player(), "p_pos": loc})
 
     #######################
     ### Event callbacks ###
@@ -41,6 +43,7 @@ class Client(ConnectionListener, TinySpaceBattles):
 
     def Player_move(self, direction, x_mag=1, y_mag=1):
         add_pos = [0, 0]
+        add_angle = 0
         if 'l' in direction:
             add_pos[0] -= 8*x_mag
         if 'r' in direction:
@@ -49,7 +52,11 @@ class Client(ConnectionListener, TinySpaceBattles):
             add_pos[1] -= 8*y_mag
         if 'd' in direction:
             add_pos[1] += 8*y_mag
-        self.Send_action('move', add_pos)
+        if 'ccw' in direction:
+            add_angle += 5
+        elif 'cw' in direction:
+            add_angle -= 5
+        self.Send_action('move', add_pos, add_angle)
 
     def Player_fire(self):
         if self.ready:
@@ -79,6 +86,7 @@ class Client(ConnectionListener, TinySpaceBattles):
             self.playersLabel = "Waiting for free slot in server"
         else:
             sys.stderr.write("ERROR: Couldn't determine player from server.\n")
+            sys.stderr.write(str(data) + "\n")
             sys.stderr.flush()
             sys.exit(1)
 
@@ -91,10 +99,15 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.ready = False
 
     def Network_move(self, data):
-        if data['pp_data']['p1'] is not None:
-            self.P1_update(data['pp_data']['p1'])
-        if data['pp_data']['p2'] is not None:
-            self.P2_update(data['pp_data']['p2'])
+        if data['p'] == 'p1':
+            self.p1.update(data['p_pos'])
+        elif data['p'] == 'p2':
+            self.p2.update(data['p_pos'])
+        else:
+            sys.stderr.write("ERROR: Couldn't update player movement information.\n")
+            sys.stderr.write(str(data) + "\n")
+            sys.stderr.flush()
+            sys.exit(1)
 
     def Network_bullets(self, data):
         self.Update_bullets(data['bullets'])

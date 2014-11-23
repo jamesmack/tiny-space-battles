@@ -1,6 +1,7 @@
 import sys
 import os
 import pygame
+import math
 from collections import deque
 from time import sleep
 from tinySpaceBattles import Bullet, Starship
@@ -30,8 +31,8 @@ class ServerChannel(object, Channel):
 
     @player_pos.setter
     def player_pos(self, value):
-        self.sprite.set_loc(value[0], value[1])
-        self._player_pos = value
+        self.sprite.update(value, True)
+        self._player_pos = self.sprite.rect.x, self.sprite.rect.y
 
     def WhichPlayer(self):
         return str("p1") if self.p1 else str("p2")
@@ -48,24 +49,16 @@ class ServerChannel(object, Channel):
     ##################################
 
     def Network_move(self, data):
-        if self.p1:
-            self.player_pos = data['pp_data']['p1']
-        else:
-            self.player_pos = data['pp_data']['p2']
+        self.player_pos = data['p_pos']
+        data['p_pos'][0] = self.player_pos[0]
+        data['p_pos'][1] = self.player_pos[1]
         self.PassOn(data)
 
     def Network_fire(self, data):
-        bullet = Bullet()
-        bullet.right = self.p1  # True when P1 (right), False when P2 (left)
+        bullet = Bullet(self.sprite.angle)
         # Set the bullet so it is where the player is
-        bullet.rect.x = self.player_pos[0]
-        bullet.rect.y = self.player_pos[1]
-        # Adjust the bullet's position so that it looks a little better
-        if self.p1:
-            bullet.rect.x += 105
-            bullet.rect.y += 37
-        else:
-            bullet.rect.y += 37
+        bullet.x = self.sprite.rect.center[0]
+        bullet.y = self.sprite.rect.center[1]
         # Add the bullet to the list
         self.bullets.add(bullet)
 
@@ -119,7 +112,7 @@ class TinyServer(object, Server):
             self.p2.Send({"action": "init", "p": 'p2'})
             self.SendToAll({"action": "ready"})
             # Only send position data from P1 -> P2
-            self.SendToAll({"action": "move", "pp_data": dict({'p1': self.p1.player_pos, 'p2': None})})
+            self.SendToAll({"action": "move", "p": "p1", "p_pos": self.p1.player_pos})
             self.ready = True
 
     def DelPlayer(self, player):
@@ -189,11 +182,11 @@ class TinyServer(object, Server):
         for player in {self.p1, self.p2}:
             for bullet in player.bullets:
                 # Remove the bullet if it flies off the screen
-                if bullet.rect.x < 5 or bullet.rect.x > (X_DIM - 5):
+                if bullet.rect.x < -15 or bullet.rect.x > (X_DIM + 15) or bullet.rect.y < -15 or bullet.rect.y > (X_DIM + 15):
                     bullet.kill()
                     break
                 # If we're here, bullet is still moving and should be sent to clients
-                bullet_locs.append((bullet.rect.x, bullet.rect.y))
+                bullet_locs.append((bullet.rect.x, bullet.rect.y, bullet.angle))
         return bullet_locs
 
     def HandleBulletHits(self, player):
