@@ -31,8 +31,8 @@ class ServerChannel(object, Channel):
 
     @player_pos.setter
     def player_pos(self, value):
-        self.sprite.update(value)
-        self._player_pos = value
+        self.sprite.update(value, True)
+        self._player_pos = self.sprite.rect.x, self.sprite.rect.y
 
     def WhichPlayer(self):
         return str("p1") if self.p1 else str("p2")
@@ -49,15 +49,6 @@ class ServerChannel(object, Channel):
     ##################################
 
     def Network_move(self, data):
-        # if self.p1 and data['p'] == 'p1':
-        #     self.player_pos = data['p_pos']
-        # elif not self.p1 and data['p'] == 'p2':
-        #     self.player_pos = data['p_pos']
-        # else:
-        #     sys.stderr.write("ERROR: Couldn't update player movement information.\n")
-        #     sys.stderr.write(str(data) + "\n")
-        #     sys.stderr.flush()
-        #     sys.exit(1)
         self.player_pos = data['p_pos']
         data['p_pos'][0] = self.player_pos[0]
         data['p_pos'][1] = self.player_pos[1]
@@ -151,8 +142,8 @@ class TinyServer(object, Server):
         self.p2.bullets.update()
 
         # Do collision detection
-        # self.HandleBulletHits(self.p1)
-        # self.HandleBulletHits(self.p2)
+        self.HandleBulletHits(self.p1)
+        self.HandleBulletHits(self.p2)
 
         # Generate position list
         bullet_list = self.GenerateBulletLocs()

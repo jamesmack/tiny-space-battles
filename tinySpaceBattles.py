@@ -74,16 +74,17 @@ class Starship(pygame.sprite.Sprite):
     def reset_health(self):
         self.health = 194
 
-    def update(self, loc):
+    def update(self, loc, assign_new_center=False):
         [x, y, angle] = loc
         self.set_loc(x, y)
         if angle != self.angle:
-            self.rotate(angle)
+            self.rotate(angle, assign_new_center)
 
-    def rotate(self, angle):
+    def rotate(self, angle, assign_new_center=False):
         new_center = self.rect.center
         self.image = pygame.transform.rotate(self.image_orig, angle)
-        self.rect = self.image.get_rect(center=new_center)
+        if assign_new_center:
+            self.rect = self.image.get_rect(center=new_center)
         self.angle = angle
 
     def set_colour(self, colour):
