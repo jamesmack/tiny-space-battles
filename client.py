@@ -91,7 +91,7 @@ class Client(ConnectionListener, TinySpaceBattles):
             sys.exit(1)
 
     def Network_ready(self, data):
-        self.playersLabel = "Battle!"
+        self.playersLabel = "You are " + self.Which_player().capitalize() + ". Battle!"
         self.ready = True
 
     def Network_player_left(self, data):
