@@ -1,6 +1,7 @@
 from sys import exit
 from os import environ
 import pygame
+import math
 from random import randrange
 
 # Define some colors
@@ -112,6 +113,7 @@ class Starship(pygame.sprite.Sprite):
         if p2:
             self.set_graphic(False)
             self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rotate(180)
         else:
             self.set_p1(True)
 
@@ -125,25 +127,33 @@ class Starship(pygame.sprite.Sprite):
         """ Return player position. """
         return [self.rect.x, self.rect.y]
 
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
 
 class Bullet(pygame.sprite.Sprite):
     """ This class represents the bullet . """
-    def __init__(self):
+    def __init__(self, angle):
         # Call the parent class (Sprite) constructor
         super(Bullet, self).__init__()
+        self.angle = angle
         self.image = pygame.Surface([10, 3])
         self.image.fill(GREEN)
+        self.image_orig = self.image.convert_alpha()
+        self.image = pygame.transform.rotate(self.image_orig, self.angle)
         self.rect = self.image.get_rect()
         self.bullet_speed = 1
-        self.right = True
+        self.x = 0
+        self.y = 0
+        self.dx = math.cos(math.radians(self.angle)) * self.bullet_speed
+        self.dy = math.sin(math.radians(-self.angle)) * self.bullet_speed
 
     def update(self):
         """ Move the bullet (PyGame-dictated function and signature). """
-        if self.right:  # move right
-            self.rect.x += self.bullet_speed
-        else:  # move left
-            self.rect.x -= self.bullet_speed
-
+        self.x += self.dx
+        self.y += self.dy
+        self.rect.x = self.x
+        self.rect.y = self.y
 
     def set_loc(self, x, y):
         """ Update the bullet's position. """
@@ -161,7 +171,7 @@ class TinySpaceBattles(object):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
         self.frame = 0
-        self.all_sprites_list = pygame.sprite.Group()
+        self.player_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
         self.p1 = Starship()
         self.p1.set_p1(True)
@@ -169,8 +179,6 @@ class TinySpaceBattles(object):
         self.p2.set_p2(True)
         self.wiimote = None
         self.is_p1 = None
-
-        self.Player_init()
         self.Wiimote_init()
 
     def Wiimote_init(self):
@@ -184,26 +192,16 @@ class TinySpaceBattles(object):
             self.wiimote = pygame.joystick.Joystick(0)
             self.wiimote.init()
 
-    def Player_init(self):
-        self.all_sprites_list.add(self.p1)
-        self.all_sprites_list.add(self.p2)
-
-    def Recreate_sprite_lists(self):
-        self.all_sprites_list.empty()
-        self.all_sprites_list.add(self.p1)
-        self.all_sprites_list.add(self.p2)
-        self.all_sprites_list.add(self.bullet_list)
-
     def Which_player(self):
         return str("p1") if self.is_p1 else str("p2")
 
     def Win_or_lose(self, win):
-        pass
+        pass  # Overlay win or lose message on screen
 
     def Update_bullets(self, bullets):
         self.bullet_list.empty()
         for loc in bullets:
-            bullet = Bullet()
+            bullet = Bullet(loc[2])
             # Set the bullet's position
             bullet.rect.x = loc[0]
             bullet.rect.y = loc[1]
@@ -285,11 +283,10 @@ class TinySpaceBattles(object):
         screen.blit(fnt.render(self.statusLabel, 1, WHITE), [10, 25])
         screen.blit(fnt.render(self.playersLabel, 1, WHITE), [10, 40])
 
-        pygame.draw.circle(screen, BLUE, (self.p1.rect.x, self.p1.rect.y), 10)
-
         # Draw players and bullets
-        self.Recreate_sprite_lists()
-        self.all_sprites_list.draw(screen)
+        self.bullet_list.draw(screen)
+        self.p1.draw(screen)
+        self.p2.draw(screen)
         pygame.display.flip()
 
 
