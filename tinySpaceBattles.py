@@ -3,6 +3,7 @@ from os import environ
 import pygame
 import math
 from random import randrange
+from collections import deque
 
 # Define some colors
 BLACK = (0,   0,   0)
@@ -61,6 +62,7 @@ class Starship(pygame.sprite.Sprite):
         super(Starship, self).__init__()
         self.health = 0
         self.angle = 0
+        self.position_hist = deque(iter([]), 10)
         self.image = pygame.Surface([120, 75])
         self.colour = BLACK
         self.image.fill(self.colour)

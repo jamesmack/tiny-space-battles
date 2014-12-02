@@ -35,6 +35,11 @@ class Client(ConnectionListener, TinySpaceBattles):
             loc.append((angle_add + player.angle) % 360)
         else:
             loc.append(player.angle)
+
+        # Push to player position list
+        player.position_hist.append(loc)
+
+        # Send to server
         connection.Send({"action": action, "p": self.Which_player(), "p_pos": loc})
 
     #######################

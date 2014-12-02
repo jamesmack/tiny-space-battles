@@ -1,7 +1,6 @@
 import sys
 import os
 import pygame
-import math
 from collections import deque
 from time import sleep
 from tinySpaceBattles import Bullet, Starship
