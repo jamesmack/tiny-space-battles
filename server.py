@@ -176,7 +176,7 @@ class TinyServer(object, Server):
 
             # Clear bullet lists
             self.p1.bullets.empty()
-            self.p1.bullets.empty()
+            self.p2.bullets.empty()
             self.SendToAll({"action": "bullets",
                             "bullets": list(),
                             "p1_health": self.p1.sprite.health,
