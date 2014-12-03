@@ -28,6 +28,8 @@ wiimote_shield = {4: 's',   # A button
 wiimote_fire = {12: 'f',  # Z button (Nunchuck)
                 5: 'f'}   # B button
 
+wiimote_restart = {8: 'restart'}
+
 keyboard_move = {pygame.K_a: 'l',  # a
                  pygame.K_d: 'r',  # d
                  pygame.K_w: 'u',  # w
@@ -52,6 +54,7 @@ healthbar_slices = pygame.image.load("images/health.png")
 pygame.font.init()
 fnt = pygame.font.SysFont("Arial", 14)
 fnt_big = pygame.font.SysFont("Arial", 50)
+fnt_med = pygame.font.SysFont("Arial", 30)
 txtpos = (100, 90)
 
 
@@ -176,6 +179,7 @@ class TinySpaceBattles(object):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
         self.winLoseLabel = ''
+        self.restartLabel = 'Press Home to restart'
         self.frame = 0
         self.player_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
@@ -274,6 +278,8 @@ class TinySpaceBattles(object):
                     self.Player_fire()
                 elif button in wiimote_shield:
                     self.Player_shield()
+                elif button in wiimote_restart and self.game_over:
+                    self.Player_restart()
 
 
     def Draw(self):
@@ -311,7 +317,14 @@ class TinySpaceBattles(object):
             textpos = text.get_rect()
             textpos.centerx = background_image.get_rect().centerx
             textpos.centery = background_image.get_rect().centery - 200
-            screen.blit(fnt_big.render(self.winLoseLabel, 1, WHITE), textpos)
+            screen.blit(text, textpos)
+
+            # Restart font
+            text = fnt_big.render(self.restartLabel, 1, WHITE)
+            textpos = text.get_rect()
+            textpos.centerx = background_image.get_rect().centerx
+            textpos.centery = background_image.get_rect().centery + 100
+            screen.blit(text, textpos)
 
         pygame.display.flip()
 

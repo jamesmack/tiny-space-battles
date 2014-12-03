@@ -173,7 +173,19 @@ class TinyServer(object, Server):
         if self.p1 and self.p2:
             self.p1.sprite.reset_health()
             self.p2.sprite.reset_health()
-            self.SendToAll({"action": "restart"})  # TODO: Add functionality to clients
+
+            # Clear bullet lists
+            self.p1.bullets.empty()
+            self.p1.bullets.empty()
+            self.SendToAll({"action": "bullets",
+                            "bullets": list(),
+                            "p1_health": self.p1.sprite.health,
+                            "p2_health": self.p2.sprite.health})
+
+            # TODO: Reset player positions
+
+            # Notify clients
+            self.SendToAll({"action": "restart"})
             self.ready = True
 
     def GenerateBulletLocs(self):
