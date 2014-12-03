@@ -28,6 +28,8 @@ wiimote_shield = {4: 's',   # A button
 wiimote_fire = {12: 'f',  # Z button (Nunchuck)
                 5: 'f'}   # B button
 
+wiimote_restart = {8: 'restart'}
+
 keyboard_move = {pygame.K_a: 'l',  # a
                  pygame.K_d: 'r',  # d
                  pygame.K_w: 'u',  # w
@@ -45,11 +47,14 @@ pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
 pygame.display.set_caption("Tiny Space Battles")
 background_image = pygame.image.load("images/bg.png")
+win_lose_bg_image = pygame.image.load("images/win_lose_bg.png")
 healthbar = pygame.image.load("images/healthbar.png")
 healthbar_slices = pygame.image.load("images/health.png")
 
 pygame.font.init()
 fnt = pygame.font.SysFont("Arial", 14)
+fnt_big = pygame.font.SysFont("Arial", 50)
+fnt_med = pygame.font.SysFont("Arial", 30)
 txtpos = (100, 90)
 
 
@@ -103,11 +108,19 @@ class Starship(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
 
+    def rand_pos(self, p1):
+        self.rotate(0)
+        if p1:
+            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+        else:
+            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rotate(180)
+
     def set_p1(self, p1):
         """ Set True for P1, False for P2. """
         if p1:
             self.set_graphic(True)
-            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rand_pos(True)
         else:
             self.set_p2(True)
 
@@ -115,8 +128,7 @@ class Starship(pygame.sprite.Sprite):
         """ Set True for P2, False for P1. """
         if p2:
             self.set_graphic(False)
-            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
-            self.rotate(180)
+            self.rand_pos(False)
         else:
             self.set_p1(True)
 
@@ -173,6 +185,8 @@ class TinySpaceBattles(object):
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
+        self.winLoseLabel = ''
+        self.restartLabel = 'Press Home to restart'
         self.frame = 0
         self.player_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
@@ -182,6 +196,8 @@ class TinySpaceBattles(object):
         self.p2.set_p2(True)
         self.wiimote = None
         self.is_p1 = None
+        self.game_over = False
+        self.has_won = False
         self.Wiimote_init()
 
     def Wiimote_init(self):
@@ -198,8 +214,13 @@ class TinySpaceBattles(object):
     def Which_player(self):
         return str("p1") if self.is_p1 else str("p2")
 
-    def Win_or_lose(self, win):
-        pass  # Overlay win or lose message on screen
+    def Win_or_lose(self, player):
+        self.game_over = True
+        if (self.is_p1 and player == 'p2') or (not self.is_p1 and player == 'p1'):
+            self.has_won = True
+            self.winLoseLabel = 'You won!'
+        else:
+            self.winLoseLabel = 'You lost.'
 
     def Update_bullets(self, bullets):
         self.bullet_list.empty()
@@ -264,6 +285,8 @@ class TinySpaceBattles(object):
                     self.Player_fire()
                 elif button in wiimote_shield:
                     self.Player_shield()
+                elif button in wiimote_restart and self.game_over:
+                    self.Player_restart()
 
 
     def Draw(self):
@@ -290,6 +313,26 @@ class TinySpaceBattles(object):
         self.bullet_list.draw(screen)
         self.p1.draw(screen)
         self.p2.draw(screen)
+
+        # If game over, notify player
+        if self.game_over:
+            # Transparency overlay
+            screen.blit(win_lose_bg_image, [0, 0])
+
+            # Win/lose font
+            text = fnt_big.render(self.winLoseLabel, 1, WHITE)
+            textpos = text.get_rect()
+            textpos.centerx = background_image.get_rect().centerx
+            textpos.centery = background_image.get_rect().centery - 200
+            screen.blit(text, textpos)
+
+            # Restart font
+            text = fnt_big.render(self.restartLabel, 1, WHITE)
+            textpos = text.get_rect()
+            textpos.centerx = background_image.get_rect().centerx
+            textpos.centery = background_image.get_rect().centery + 100
+            screen.blit(text, textpos)
+
         pygame.display.flip()
 
 

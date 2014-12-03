@@ -68,6 +68,8 @@ class Client(ConnectionListener, TinySpaceBattles):
         player.position_hist.append(loc)
         self.Send_action('move')
 
+    def Player_restart(self):
+        self.Send_action('restart')
 
     def Player_fire(self):
         if self.ready:
@@ -130,8 +132,21 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.p2.health = data['p2_health']
 
     def Network_death(self, data):
-        print(data)
-        print("A player has died")  # TODO: improve this...
+        self.Win_or_lose(data['p'])
+        self.ready = False
+
+    def Network_restart(self, data):
+        # Reset position and send to server
+        if self.is_p1:
+            self.p1.rand_pos(True)
+        else:
+            self.p2.rand_pos(False)
+        self.Send_action('move')
+
+        # Clear game over flag
+        self.game_over = False
+        self.ready = True
+
 
     def Network(self, data):
         # print 'network:', data
