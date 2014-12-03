@@ -7,7 +7,6 @@ from tinySpaceBattles import TinySpaceBattles
 class Client(ConnectionListener, TinySpaceBattles):
     def __init__(self, host, port):
         self.Connect((host, port))
-        self.player_loc = dict()
         self.ready = False
         TinySpaceBattles.__init__(self)
 
@@ -21,7 +20,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         if "Connecting" in self.statusLabel:
             self.statusLabel = "Connecting" + ("." * ((self.frame / 30) % 4))
 
-    def Send_action(self, action, loc_add=(0, 0), angle_add=0):
+    def Send_action(self, action):
         if self.is_p1 is None:
             return
         if self.is_p1:
@@ -29,15 +28,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         else:
             player = self.p2
         loc = player.get_loc()
-        if loc_add:
-            loc = [x + y for x, y in zip(player.get_loc(), loc_add)]
-        if angle_add:
-            loc.append((angle_add + player.angle) % 360)
-        else:
-            loc.append(player.angle)
-
-        # Push to player position list
-        player.position_hist.append(loc)
+        loc.append(player.angle)
 
         # Send to server
         connection.Send({"action": action, "p": self.Which_player(), "p_pos": loc})
@@ -47,21 +38,36 @@ class Client(ConnectionListener, TinySpaceBattles):
     #######################
 
     def Player_move(self, direction, x_mag=1, y_mag=1):
-        add_pos = [0, 0]
-        add_angle = 0
+        if self.is_p1 is None:
+            return
+        if self.is_p1:
+            player = self.p1
+        else:
+            player = self.p2
+
+        loc = player.get_loc()
+
         if 'l' in direction:
-            add_pos[0] -= 8*x_mag
+            loc[0] -= 8*x_mag
         if 'r' in direction:
-            add_pos[0] += 8*x_mag
+            loc[0] += 8*x_mag
         if 'u' in direction:
-            add_pos[1] -= 8*y_mag
+            loc[1] -= 8*y_mag
         if 'd' in direction:
-            add_pos[1] += 8*y_mag
+            loc[1] += 8*y_mag
+
         if 'ccw' in direction:
-            add_angle += 5
+            loc.append((player.angle + 5) % 360)
         elif 'cw' in direction:
-            add_angle -= 5
-        self.Send_action('move', add_pos, add_angle)
+            loc.append((player.angle - 5) % 360)
+        else:
+            loc.append(player.angle)
+
+        # Push to player position list and notify server
+        player.update(loc, True)
+        player.position_hist.append(loc)
+        self.Send_action('move')
+
 
     def Player_fire(self):
         if self.ready:
@@ -106,10 +112,12 @@ class Client(ConnectionListener, TinySpaceBattles):
     def Network_move(self, data):
         position = data['p_pos']
         player = data['p']
-        if player == 'p1':
+        if player == 'p1' and not self.is_p1:
             self.p1.update(position)
-        elif player == 'p2':
+        elif player == 'p2' and self.is_p1:
             self.p2.update(position)
+        elif player in ('p1', 'p2'):  # This is client's position coming back from player
+            pass  # TODO: Anti-cheat detection here
         else:
             sys.stderr.write("ERROR: Couldn't update player movement information.\n")
             sys.stderr.write(str(data) + "\n")
@@ -123,7 +131,7 @@ class Client(ConnectionListener, TinySpaceBattles):
 
     def Network_death(self, data):
         print(data)
-        print("A player has died") # TODO: improve this...
+        print("A player has died")  # TODO: improve this...
 
     def Network(self, data):
         # print 'network:', data

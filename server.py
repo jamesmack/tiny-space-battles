@@ -30,7 +30,7 @@ class ServerChannel(object, Channel):
 
     @player_pos.setter
     def player_pos(self, value):
-        self.sprite.update(value, True)
+        self.sprite.update(value)
         self._player_pos = self.sprite.rect.x, self.sprite.rect.y
 
     def WhichPlayer(self):
@@ -49,8 +49,6 @@ class ServerChannel(object, Channel):
 
     def Network_move(self, data):
         self.player_pos = data['p_pos']
-        data['p_pos'][0] = self.player_pos[0]  # When rotated, the player's location will move slightly
-        data['p_pos'][1] = self.player_pos[1]
         self.PassOn(data)
 
     def Network_fire(self, data):
