@@ -2,7 +2,7 @@ tiny-space-battles
 =========================
 
 ## About
-This is my final project for the CENG 356 class at the University of Victoria, taught this year. The goal was to create something that used client-server interactions to communicate Wiimote data. 
+This is my final project for the CENG 356 class at the University of Victoria (Fall 2014, taught by Michael Liu). The goal was to create something that used client-server interactions to communicate Wiimote data. 
 
 ## Installation and setup
 1. Install [Python](https://www.python.org/downloads/) 2.7.x. Version 2.7.8 was used for development.
@@ -26,7 +26,7 @@ This is my final project for the CENG 356 class at the University of Victoria, t
   * Wiimote
     * Fire - B
     * Shield - A
-    * Rotate cw, ccw - D-pad right, left
+    * Rotate cw, ccw - D-pad right or up, D-pad left or down
   * Nunchuck
     * Fire - Z
     * Shield - C
