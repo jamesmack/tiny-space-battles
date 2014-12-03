@@ -44,6 +44,8 @@ keyboard_shield = {pygame.K_PERIOD: 's'}  # .
 
 keyboard_fire = {pygame.K_SPACE: 'f'}  # *space*
 
+keyboard_restart = {pygame.K_j: 'restart'}
+
 environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
@@ -188,7 +190,7 @@ class TinySpaceBattles(object):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
         self.winLoseLabel = ''
-        self.restartLabel = 'Press Home to restart'
+        self.restartLabel = 'Press Home button or j key to restart'
         self.frame = 0
         self.player_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
@@ -278,6 +280,8 @@ class TinySpaceBattles(object):
                     self.Player_fire()
                 elif button in keyboard_shield:
                     self.Player_shield()
+                elif button in keyboard_restart and self.game_over:
+                    self.Player_restart()
 
             if event.type == pygame.JOYBUTTONDOWN:
                 button = event.dict['button']
@@ -329,7 +333,7 @@ class TinySpaceBattles(object):
             screen.blit(text, textpos)
 
             # Restart font
-            text = fnt_big.render(self.restartLabel, 1, WHITE)
+            text = fnt_med.render(self.restartLabel, 1, WHITE)
             textpos = text.get_rect()
             textpos.centerx = background_image.get_rect().centerx
             textpos.centery = background_image.get_rect().centery + 100
