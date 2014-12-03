@@ -130,8 +130,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.p2.health = data['p2_health']
 
     def Network_death(self, data):
-        print(data)
-        print("A player has died")  # TODO: improve this...
+        self.Win_or_lose(data['p'])
 
     def Network(self, data):
         # print 'network:', data

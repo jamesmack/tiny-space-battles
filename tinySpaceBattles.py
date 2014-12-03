@@ -45,6 +45,7 @@ pygame.init()
 screen = pygame.display.set_mode(SCREENSIZE)
 pygame.display.set_caption("Tiny Space Battles")
 background_image = pygame.image.load("images/bg.png")
+win_lose_bg_image = pygame.image.load("images/win_lose_bg.png")
 healthbar = pygame.image.load("images/healthbar.png")
 healthbar_slices = pygame.image.load("images/health.png")
 
@@ -182,6 +183,7 @@ class TinySpaceBattles(object):
         self.p2.set_p2(True)
         self.wiimote = None
         self.is_p1 = None
+        self.game_over = False
         self.Wiimote_init()
 
     def Wiimote_init(self):
@@ -198,8 +200,8 @@ class TinySpaceBattles(object):
     def Which_player(self):
         return str("p1") if self.is_p1 else str("p2")
 
-    def Win_or_lose(self, win):
-        pass  # Overlay win or lose message on screen
+    def Win_or_lose(self, player):
+        self.game_over = True
 
     def Update_bullets(self, bullets):
         self.bullet_list.empty()
@@ -290,6 +292,11 @@ class TinySpaceBattles(object):
         self.bullet_list.draw(screen)
         self.p1.draw(screen)
         self.p2.draw(screen)
+
+        # If game over, notify player
+        if self.game_over:
+            screen.blit(win_lose_bg_image, [0, 0])
+
         pygame.display.flip()
 
 
