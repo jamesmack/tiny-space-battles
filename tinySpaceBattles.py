@@ -20,7 +20,9 @@ SCREENSIZE = (X_DIM, Y_DIM)
 JOY_THRESH = 0.08
 
 wiimote_move = {0: 'ccw',  # D-pad left
-                1: 'cw'}  # D-pad right
+                2: 'ccw',  # D-pad up
+                1: 'cw',  # D-pad down
+                3: 'cw'}  # D-pad right
 
 wiimote_shield = {4: 's',   # A button
                   11: 's'}  # C button (Nunchuck)
@@ -255,7 +257,7 @@ class TinySpaceBattles(object):
                     move.add('u')
 
             # Handle Wiimote D-Pad here
-            for button in xrange(0, 2):
+            for button in xrange(0, 4):
                 if self.wiimote.get_button(button):
                     move.add(wiimote_move[button])
             if x_mag or y_mag:
