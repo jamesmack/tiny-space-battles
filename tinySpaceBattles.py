@@ -51,6 +51,7 @@ healthbar_slices = pygame.image.load("images/health.png")
 
 pygame.font.init()
 fnt = pygame.font.SysFont("Arial", 14)
+fnt_big = pygame.font.SysFont("Arial", 50)
 txtpos = (100, 90)
 
 
@@ -174,6 +175,7 @@ class TinySpaceBattles(object):
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
+        self.winLoseLabel = ''
         self.frame = 0
         self.player_list = pygame.sprite.Group()
         self.bullet_list = pygame.sprite.Group() # Don't use the bullet list in players (no need to be separate lists)
@@ -184,6 +186,7 @@ class TinySpaceBattles(object):
         self.wiimote = None
         self.is_p1 = None
         self.game_over = False
+        self.has_won = False
         self.Wiimote_init()
 
     def Wiimote_init(self):
@@ -202,6 +205,11 @@ class TinySpaceBattles(object):
 
     def Win_or_lose(self, player):
         self.game_over = True
+        if (self.is_p1 and player == 'p2') or (not self.is_p1 and player == 'p1'):
+            self.has_won = True
+            self.winLoseLabel = 'You won!'
+        else:
+            self.winLoseLabel = 'You lost.'
 
     def Update_bullets(self, bullets):
         self.bullet_list.empty()
@@ -295,7 +303,15 @@ class TinySpaceBattles(object):
 
         # If game over, notify player
         if self.game_over:
+            # Transparency overlay
             screen.blit(win_lose_bg_image, [0, 0])
+
+            # Win/lose font
+            text = fnt_big.render(self.winLoseLabel, 1, WHITE)
+            textpos = text.get_rect()
+            textpos.centerx = background_image.get_rect().centerx
+            textpos.centery = background_image.get_rect().centery - 200
+            screen.blit(fnt_big.render(self.winLoseLabel, 1, WHITE), textpos)
 
         pygame.display.flip()
 
