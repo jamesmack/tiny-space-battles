@@ -136,6 +136,13 @@ class Client(ConnectionListener, TinySpaceBattles):
         self.ready = False
 
     def Network_restart(self, data):
+        # Reset position and send to server
+        if self.is_p1:
+            self.p1.rand_pos(True)
+        else:
+            self.p2.rand_pos(False)
+        self.Send_action('move')
+
         # Clear game over flag
         self.game_over = False
         self.ready = True

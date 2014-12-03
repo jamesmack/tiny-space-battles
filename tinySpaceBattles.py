@@ -108,11 +108,19 @@ class Starship(pygame.sprite.Sprite):
         self.image.convert_alpha()
         self.rect = self.image.get_rect()
 
+    def rand_pos(self, p1):
+        self.rotate(0)
+        if p1:
+            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+        else:
+            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rotate(180)
+
     def set_p1(self, p1):
         """ Set True for P1, False for P2. """
         if p1:
             self.set_graphic(True)
-            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rand_pos(True)
         else:
             self.set_p2(True)
 
@@ -120,8 +128,7 @@ class Starship(pygame.sprite.Sprite):
         """ Set True for P2, False for P1. """
         if p2:
             self.set_graphic(False)
-            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
-            self.rotate(180)
+            self.rand_pos(False)
         else:
             self.set_p1(True)
 

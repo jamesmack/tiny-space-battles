@@ -182,8 +182,6 @@ class TinyServer(object, Server):
                             "p1_health": self.p1.sprite.health,
                             "p2_health": self.p2.sprite.health})
 
-            # TODO: Reset player positions
-
             # Notify clients
             self.SendToAll({"action": "restart"})
             self.ready = True
