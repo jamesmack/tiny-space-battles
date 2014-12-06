@@ -63,10 +63,15 @@ txtpos = (100, 90)
 
 
 class Starship(pygame.sprite.Sprite):
-    """ This class represents a starship, which is the client's representation of a player. """
+    """
+    This class represents a starship, which is the client's representation of a player.
+    """
 
     def __init__(self):
-        """ Set up the player on creation. """
+        """
+        Set up the player on creation.
+        :return: None
+        """
         # Call the parent class (Sprite) constructor
         super(Starship, self).__init__()
         self.health = 0
@@ -219,6 +224,9 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class TinySpaceBattles(object):
+    """
+    The main client class, used primarily on the client.
+    """
     def __init__(self):
         self.statusLabel = "Connecting"
         self.playersLabel = "Waiting for player"
@@ -235,9 +243,13 @@ class TinySpaceBattles(object):
         self.is_p1 = None
         self.game_over = False
         self.has_won = False
-        self.Wiimote_init()
+        self.wiimote_init()
 
-    def Wiimote_init(self):
+    def wiimote_init(self):
+        """
+        Initialize the Wiimote if found. Else, use the keyboard.
+        :return: None
+        """
         # Count the joysticks the computer has
         if pygame.joystick.get_count() == 0:
             # No joysticks!
@@ -248,10 +260,19 @@ class TinySpaceBattles(object):
             self.wiimote = pygame.joystick.Joystick(0)
             self.wiimote.init()
 
-    def Which_player(self):
+    def which_player(self):
+        """
+        Returns a string containing "p1" or "p2" depending on which player the client is.
+        :return: string
+        """
         return str("p1") if self.is_p1 else str("p2")
 
-    def Win_or_lose(self, player):
+    def win_or_lose(self, player):
+        """
+        Handles and notifies players of win/lose events.
+        :param player: The player that has died according to the server.
+        :return: None
+        """
         self.game_over = True
         if (self.is_p1 and player == 'p2') or (not self.is_p1 and player == 'p1'):
             self.has_won = True
@@ -259,7 +280,12 @@ class TinySpaceBattles(object):
         else:
             self.winLoseLabel = 'You lost.'
 
-    def Update_bullets(self, bullets):
+    def update_bullets(self, bullets):
+        """
+        Uses a list of bullet locations and angles to generate bullets for client
+        :list bullets: All bullet locations with each location entry a list [x, y, angle]
+        :return: None
+        """
         self.bullet_list.empty()
         for loc in bullets:
             bullet = Bullet(loc[2])
@@ -269,7 +295,11 @@ class TinySpaceBattles(object):
             # Add the bullet to the list
             self.bullet_list.add(bullet)
 
-    def Check_for_wiimote_move(self):
+    def check_for_wiimote_move(self):
+        """
+        Checks state of Wiimote and calls player_move
+        :return: None
+        """
         if self.wiimote is not None:
             move = set()
 
@@ -300,7 +330,11 @@ class TinySpaceBattles(object):
             elif move:
                 self.Player_move(move)
 
-    def Events(self):
+    def events(self):
+        """
+        Handles PyGame events.
+        :return: None
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 exit()
@@ -327,8 +361,11 @@ class TinySpaceBattles(object):
                 elif button in wiimote_restart and self.game_over:
                     self.Player_restart()
 
-
-    def Draw(self):
+    def draw(self):
+        """
+        Draws all the art assets (both players, health bars, background, game over, etc.) for the client
+        :return: None
+        """
         #Draw background image
         screen.blit(background_image, [0, 0])
 

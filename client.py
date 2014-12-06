@@ -13,9 +13,9 @@ class Client(ConnectionListener, TinySpaceBattles):
     def Loop(self):
         self.Pump()
         connection.Pump()
-        self.Events()
-        self.Check_for_wiimote_move()
-        self.Draw()
+        self.events()
+        self.check_for_wiimote_move()
+        self.draw()
 
         if "Connecting" in self.statusLabel:
             self.statusLabel = "Connecting" + ("." * ((self.frame / 30) % 4))
@@ -31,7 +31,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         loc.append(player.angle)
 
         # Send to server
-        connection.Send({"action": action, "p": self.Which_player(), "p_pos": loc})
+        connection.Send({"action": action, "p": self.which_player(), "p_pos": loc})
 
     #######################
     ### Event callbacks ###
@@ -104,7 +104,7 @@ class Client(ConnectionListener, TinySpaceBattles):
             sys.exit(1)
 
     def Network_ready(self, data):
-        self.playersLabel = "You are " + self.Which_player().capitalize() + ". Battle!"
+        self.playersLabel = "You are " + self.which_player().capitalize() + ". Battle!"
         self.ready = True
 
     def Network_player_left(self, data):
@@ -127,12 +127,12 @@ class Client(ConnectionListener, TinySpaceBattles):
             sys.exit(1)
 
     def Network_bullets(self, data):
-        self.Update_bullets(data['bullets'])
+        self.update_bullets(data['bullets'])
         self.p1.health = data['p1_health']
         self.p2.health = data['p2_health']
 
     def Network_death(self, data):
-        self.Win_or_lose(data['p'])
+        self.win_or_lose(data['p'])
         self.ready = False
 
     def Network_restart(self, data):
