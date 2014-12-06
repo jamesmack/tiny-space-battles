@@ -206,9 +206,9 @@ class TinyServer(object, Server):
         # Send new bullet lists
         if bullet_list or player_had_bullets:
             self.send_to_all({"action": "bullets",
-                            "bullets": bullet_list,
-                            "p1_health": self.p1.sprite.health,
-                            "p2_health": self.p2.sprite.health})
+                              "bullets": bullet_list,
+                              "p1_health": self.p1.sprite.health,
+                              "p2_health": self.p2.sprite.health})
 
         # If any of the players have died, let both players know
         if self.p1.sprite.health <= 0 or self.p2.sprite.health <= 0:
@@ -242,9 +242,9 @@ class TinyServer(object, Server):
             self.p1.bullets.empty()
             self.p2.bullets.empty()
             self.send_to_all({"action": "bullets",
-                            "bullets": list(),
-                            "p1_health": self.p1.sprite.health,
-                            "p2_health": self.p2.sprite.health})
+                              "bullets": list(),
+                              "p1_health": self.p1.sprite.health,
+                              "p2_health": self.p2.sprite.health})
 
             # Notify clients
             self.send_to_all({"action": "restart"})
@@ -259,7 +259,8 @@ class TinyServer(object, Server):
         for player in {self.p1, self.p2}:
             for bullet in player.bullets:
                 # Remove the bullet if it flies off the screen
-                if bullet.rect.x < -15 or bullet.rect.x > (X_DIM + 15) or bullet.rect.y < -15 or bullet.rect.y > (X_DIM + 15):
+                if bullet.rect.x < -15 or bullet.rect.x > (X_DIM + 15) \
+                        or bullet.rect.y < -15 or bullet.rect.y > (X_DIM + 15):
                     bullet.kill()
                     break
                 # If we're here, bullet is still moving and should be sent to clients
