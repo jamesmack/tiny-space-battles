@@ -342,24 +342,24 @@ class TinySpaceBattles(object):
             if event.type == pygame.KEYDOWN:
                 button = event.key
                 if button in keyboard_move:
-                    self.Player_move(keyboard_move[button])
+                    self.player_move(keyboard_move[button])
                 elif button in keyboard_fire:
-                    self.Player_fire()
+                    self.player_fire()
                 elif button in keyboard_shield:
-                    self.Player_shield()
+                    self.player_shield()
                 elif button in keyboard_restart and self.game_over:
-                    self.Player_restart()
+                    self.player_restart()
 
             if event.type == pygame.JOYBUTTONDOWN:
                 button = event.dict['button']
                 if button in wiimote_move:
-                    self.Player_move(wiimote_move[button])
+                    self.player_move(wiimote_move[button])
                 elif button in wiimote_fire:
-                    self.Player_fire()
+                    self.player_fire()
                 elif button in wiimote_shield:
-                    self.Player_shield()
+                    self.player_shield()
                 elif button in wiimote_restart and self.game_over:
-                    self.Player_restart()
+                    self.player_restart()
 
     def draw(self):
         """
