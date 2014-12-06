@@ -63,7 +63,7 @@ txtpos = (100, 90)
 
 
 class Starship(pygame.sprite.Sprite):
-    """ This class represents a starship. """
+    """ This class represents a starship, which is the client's representation of a player. """
 
     def __init__(self):
         """ Set up the player on creation. """
@@ -82,28 +82,53 @@ class Starship(pygame.sprite.Sprite):
         self.bullets = pygame.sprite.Group()
         self.reset_health()
 
+    @property
+    def rect_xy(self):
+        return [self.rect.x, self.rect.y]
+
+    @rect_xy.setter
+    def rect_xy(self, (x, y)):
+        self.rect.x = x
+        self.rect.y = y
+
     def reset_health(self):
+        """
+        Reset the player's health (194 due to 1:1 mapping of health blocks in bar to health attribute).
+        :return: None
+        """
         self.health = 194
 
     def update(self, loc, assign_new_center=False):
+        """
+        Called to update the player's location.
+        :list loc: New player location [x, y, angle]
+        :bool assign_new_center: Whether rotation should maintain rotation around image's center
+        :return: None
+        """
         [x, y, angle] = loc
-        self.set_loc(x, y)
+        self.rect_xy = (x, y)
         if angle != self.angle:
             self.rotate(angle, assign_new_center)
 
     def rotate(self, angle, assign_new_center=False):
+        """
+        Rotates player's sprite.
+        :int angle: Amount of angle in degrees to rotate
+        :bool assign_new_center: Whether rotation should maintain rotation around image's center
+        :return: None
+        """
         new_center = self.rect.center
         self.image = pygame.transform.rotate(self.image_orig, angle)
         if assign_new_center:
             self.rect = self.image.get_rect(center=new_center)
         self.angle = angle
 
-    def set_colour(self, colour):
-        self.colour = colour
-        self.image.fill(self.colour)
-        self.rect = self.image.get_rect()
-
     def set_graphic(self, p1):
+        """
+        Set a player's sprite to an image.
+        :bool p1: True if setting P1's sprite, False otherwise
+        :return: None
+        """
         if p1:
             self.image = pygame.image.load("images/p1.png")
         else:
@@ -113,15 +138,24 @@ class Starship(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
     def rand_pos(self, p1):
+        """
+        Randomize position of sprite.
+        :bool p1: True if setting P1's sprite, False otherwise
+        :return: None
+        """
         self.rotate(0)
         if p1:
-            self.set_loc(randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rect_xy = (randrange(0, 50), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
         else:
-            self.set_loc(randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
+            self.rect_xy = (randrange(X_DIM-180, X_DIM-150), randrange((Y_DIM/2)-50, (Y_DIM/2)+50))
             self.rotate(180)
 
     def set_p1(self, p1):
-        """ Set True for P1, False for P2. """
+        """
+        Set graphic and randomize position of sprite.
+        :bool p1: True if setting P1's sprite, False otherwise
+        :return: None
+        """
         if p1:
             self.set_graphic(True)
             self.rand_pos(True)
@@ -129,24 +163,23 @@ class Starship(pygame.sprite.Sprite):
             self.set_p2(True)
 
     def set_p2(self, p2):
-        """ Set True for P2, False for P1. """
+        """
+        Set graphic and randomize position of sprite.
+        :bool p2: True if setting P2's sprite, False otherwise
+        :return: None
+        """
         if p2:
             self.set_graphic(False)
             self.rand_pos(False)
         else:
             self.set_p1(True)
 
-    def set_loc(self, x, y):
-        """ Update the player's position. """
-        # Set position
-        self.rect.x = x
-        self.rect.y = y
-
-    def get_loc(self):
-        """ Return player position. """
-        return [self.rect.x, self.rect.y]
-
     def draw(self, surface):
+        """
+        Draw the player on the screen.
+        :pygame.surface surface: The surface on which to draw the sprite.
+        :return:
+        """
         surface.blit(self.image, self.rect)
 
 

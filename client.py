@@ -27,7 +27,7 @@ class Client(ConnectionListener, TinySpaceBattles):
             player = self.p1
         else:
             player = self.p2
-        loc = player.get_loc()
+        loc = player.rect_xy
         loc.append(player.angle)
 
         # Send to server
@@ -45,7 +45,7 @@ class Client(ConnectionListener, TinySpaceBattles):
         else:
             player = self.p2
 
-        loc = player.get_loc()
+        loc = player.rect_xy
 
         if 'l' in direction:
             loc[0] -= 8*x_mag
